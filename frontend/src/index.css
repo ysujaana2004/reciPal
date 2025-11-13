@@ -1,81 +1,14 @@
-/* :root {
-  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  font-weight: 400;
 
-  color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
-
-  font-synthesis: none;
-  text-rendering: optimizeLegibility;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
-}
-a:hover {
-  color: #535bf2;
-}
-
-body {
-  margin: 0;
-  display: flex;
-  place-items: center;
-  min-width: 320px;
-  min-height: 100vh;
-}
-
-h1 {
-  font-size: 3.2em;
-  line-height: 1.1;
-}
-
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  background-color: #1a1a1a;
-  cursor: pointer;
-  transition: border-color 0.25s;
-}
-button:hover {
-  border-color: #646cff;
-}
-button:focus,
-button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    color: #213547;
-    background-color: #ffffff;
-  }
-  a:hover {
-    color: #747bff;
-  }
-  button {
-    background-color: #f9f9f9;
-  }
-} */
 
 
 /* ===== Root theme ===== */
 :root{
-  --bg: #fffaf7;             /* warm off-white */
+  --bg: #555951;             /* warm off-white */
   --surface: #ffffff;
   --muted: #6b6b6b;
   --text: #1d1d1f;
   --card-border: #efe7e2;
-  --accent: #c8543e;         /* terracotta */
+  --accent: #ad8881;         /* terracotta */
   --accent-600: #b14a36;
   --accent-50: #fdeee9;
   --ring: rgba(200,84,62,0.35);
@@ -109,6 +42,22 @@ img{ max-width: 100%; display: block }
 }
 
 /* ===== Home ===== */
+.image-container {
+  display: flex;
+  justify-content: center; /* horizontally center */
+  align-items: center;     /* vertically center if it has height */
+  width: 100%;
+  margin-top: -25px; /* optional spacing */
+}
+
+.main-image {
+  max-width: 350px; /* size control */
+  height: auto;
+  display: block;
+  margin-top: 0%;
+
+}
+
 .home .hero{
   padding: 64px 20px 24px;
   text-align: center;
@@ -130,6 +79,12 @@ img{ max-width: 100%; display: block }
   margin: 10px 0 14px;
   letter-spacing: -0.02em;
   font-weight: 800;
+  background: linear-gradient(120deg, #ffffff 0%, #ffffff 35%, #f3b182 70%, #feffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;  
+  margin-top: -300px;
+
 }
 
 .hero__subtitle{
@@ -137,6 +92,7 @@ img{ max-width: 100%; display: block }
   max-width: 760px;
   color: var(--muted);
   font-size: clamp(15px, 1.9vw, 18px);
+  color: #f3b182;
 }
 
 .hero__cta{
@@ -188,6 +144,7 @@ img{ max-width: 100%; display: block }
   margin: 6px 0 6px;
   font-size: clamp(22px, 2.5vw, 28px);
   font-weight: 800;
+  color: #a8c3b9;
 }
 
 .features__subtitle{
@@ -196,6 +153,9 @@ img{ max-width: 100%; display: block }
   margin: 0 auto 24px;
   max-width: 760px;
   padding: 0 20px;
+  color:#a8c3b9;
+  font-size: clamp(15px, 1.9vw, 18px);
+
 }
 
 .grid{
@@ -216,7 +176,10 @@ img{ max-width: 100%; display: block }
   box-shadow: var(--shadow);
   padding: 18px 18px 14px;
   transition: border-color .2s ease, transform .06s ease, box-shadow .2s ease;
+  background-color: #fec195;
+  margin-top: -200px;
 }
+
 .card:hover{
   border-color: var(--accent);
   box-shadow: 0 16px 40px rgba(200,84,62,.10);
@@ -242,11 +205,13 @@ img{ max-width: 100%; display: block }
 .card__title{
   font-size: 18px;
   margin: 0;
+  color: #000000;
 }
 
 .card__body{
   color: var(--muted);
   margin: 6px 0 14px;
+  color: #000000;
 }
 
 .card__action{
@@ -278,17 +243,21 @@ body.has-fixed-navbar main{
 
 
 /* ===== Navbar ===== */
+.login-image {
+  width: 80px;
+  height: 80px;
+  object-fit: contain;
+  margin-bottom: 12px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+}
+
 .navbar {
-  position: sticky;
-  top: 0;
-  z-index: 50;
-  background: var(--surface);
-  border-bottom: 1px solid var(--card-border);
-  box-shadow: 0 1px 4px rgba(0,0,0,0.03);
+  position: static;
+  box-shadow: 0 1px 4px rgba(34, 9, 9, 0.03);
 }
 
 .navbar__container {
-  max-width: var(--maxw);
+  /*max-width: var(--maxw);*/
   margin-inline: auto;
   padding: 10px 20px;
   display: flex;
@@ -301,12 +270,17 @@ body.has-fixed-navbar main{
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 700;
-  font-size: 18px;
-  color: var(--text);
+  font-weight: 800;
+  font-size: 30px;
+  background: linear-gradient(120deg, #ffffff 0%, #ffffff 35%, #f3b182 70%, #feffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
+
 }
+
 .navbar__logo {
-  font-size: 20px;
+  font-size: 40px;
 }
 .navbar__name {
   letter-spacing: -0.01em;
@@ -319,11 +293,16 @@ body.has-fixed-navbar main{
 }
 
 .navbar__link {
-  font-size: 15px;
-  font-weight: 500;
+  font-size: 20px;
+  font-weight: bold;
   color: var(--muted);
   transition: color 0.2s ease;
+  background: linear-gradient(120deg, #ffffff 0%, #ffffff 35%, #f3b182 70%, #f3b182 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  font-family: Verdana, Geneva, Tahoma, sans-serif;
 }
+/*
 .navbar__link:hover {
   color: var(--accent);
 }
@@ -332,11 +311,12 @@ body.has-fixed-navbar main{
   font-weight: 600;
 }
 
-/* Right actions */
+ Right actions 
 .navbar__actions {
   display: flex;
   align-items: center;
   gap: 16px;
+  margin-top: -20px;
 }
 
 .navbar__action {
@@ -363,7 +343,7 @@ body.has-fixed-navbar main{
   background: var(--accent);
   color: #fff;
 }
-
+*/
 /* ===== Title-only recipe cards ===== */
 .recipe--minimal{
   display:flex;
@@ -512,4 +492,36 @@ a:hover ~ .cursor-ring,
     height: 60px;
     /* CHANGE: Set the border color to your white/light background for contrast on hover */
     border-color: var(--surface); 
+}
+
+.hero {
+  display: flex;
+  justify-content: center;   /* center content horizontally */
+  align-items: center;       /* center content vertically */
+  flex-direction: column;    /* stack heading, text, button vertically */
+  text-align: center;
+  min-height: 80vh;          /* makes hero section tall and centered */
+}
+
+.hero-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;                 /* space between heading, text, button */
+}
+
+.hero h1 {
+  font-size: 2.8rem;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.hero-subtitle {
+  font-size: 1.1rem;
+  color: #e3b26f;
+  max-width: 600px;
+}
+
+.hero-button {
+  margin-top: 1.2rem;
 }

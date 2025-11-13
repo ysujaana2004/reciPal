@@ -1,6 +1,9 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { getAllRecipes } from "../api_funcs/recipes.js";
+import "./Recipes.css"
+import Addreci from "./AddReci.jsx";
+
 
 export default function Recipes() {
   const [recipes, setRecipes] = useState([]);
@@ -26,68 +29,30 @@ export default function Recipes() {
     <main className="page">
       {/* Page header and Search combined */}
       <div
-        className="page__head container"
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          alignItems: "flex-start", // Align items to the top
-          marginBottom: "2rem",
-        }}
-      >
+        className="page__head container">
         {/* LEFT SIDE: Title, Subtitle, and CTA Button */}
+
         <div>
           <h1 className="page__title">Recipe Collection</h1>
-          <p className="page__subtitle" style={{ marginBottom: "1rem" }}>
+          <p className="page__subtitle">
             Discover and share recipes transcribed from your audio/video.
           </p>
-          <Link to="/recipes/new" className="btn btn--solid page__cta">
-            ＋ Add Recipe
-          </Link>
         </div>
-
+          <div className="navbar__actions">
+            <Link to="/login">
+              <Addreci />
+            </Link>
+            </div>
+             <div className="searchbar">
+                <input
+                  className="searchbar__input"
+                  placeholder="Search recipe titles…"
+                />
+            </div>
         {/* RIGHT SIDE: Search bar */}
         <section
           style={{ width: '250px', padding: 0, marginTop: '8.0rem' }} // Align search bar visually
         >
-          <div
-            className="searchbar"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              border: "1px solid #e0e0e0",
-              borderRadius: "25px", 
-              padding: "0.5rem 1rem",
-              backgroundColor: "#ffffff",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)",
-              width: "100%",
-            }}
-          >
-            <span
-              className="searchbar__icon"
-              aria-hidden
-              style={{
-                marginRight: "0.75rem",
-                fontSize: "1.2rem",
-                color: "#757575",
-              }}
-            >
-              🔎
-            </span>
-            <input
-              className="searchbar__input"
-              placeholder="Search recipe titles…"
-              // You'll need to add value={query} and onChange={(e) => setQuery(e.target.value)} here
-              style={{
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                padding: 0,
-                fontSize: "1rem",
-                color: "#333",
-                width: "100%",
-              }}
-            />
-          </div>
         </section>
       </div>
 

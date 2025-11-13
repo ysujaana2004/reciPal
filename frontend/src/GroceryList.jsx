@@ -1,83 +1,63 @@
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
+import "./GroceryList.css";
+import AnimatedCheckbox from "./card.jsx"; 
 
 export default function GroceryList() {
   const [items, setItems] = useState([]);
 
-  useEffect(() => {
-    async function load() {
-      // Example shape your backend should return:
-      // [{ id: "milk", label: "Whole milk (1 gal)" }, ...]
-      const recommended = [
-        { id: "milk", label: "Whole milk (1 gal)" },
-        { id: "eggs", label: "Eggs (dozen)" },
-        { id: "pasta", label: "Spaghetti pasta" },
-        { id: "tomato-sauce", label: "Tomato sauce" },
-      ];
-      setItems(recommended);
-    }
-    load();
-  }, []);
+useEffect(() => {
+  async function load() {
+    const recommended = [
+      { id: "milk", label: "Whole milk (1 gal)" },
+      { id: "eggs", label: "Eggs (dozen)" },
+      { id: "pasta", label: "Spaghetti pasta" },
+      { id: "tomato-sauce", label: "Tomato sauce" },
+      
+      // EXTRA FAKE TEST DATA
+      { id: "bread", label: "Whole wheat bread" },
+      { id: "butter", label: "Salted butter" },
+      { id: "rice", label: "Long grain rice" },
+      { id: "chicken", label: "Chicken breast (2 lb)" },
+      { id: "apples", label: "Apples (6 pack)" },
+      { id: "spinach", label: "Fresh spinach (1 bag)" }
+    ];
+
+    setItems(recommended);
+  }
+  load();
+}, []);
+
 
   const handleCheck = (id) => {
     setItems((prev) => prev.filter((it) => it.id !== id));
   };
 
   return (
-    <main className="page container" style={{ maxWidth: 720 }}>
-      <h1 className="page__title">Grocery List</h1>
-      <p className="page__subtitle">Recommended ingredients to buy.</p>
+    <main className="grocery-page">
+      <div className="grocery-container">
+        <h1 className="grocery-title">🛒 Grocery List</h1>
+        <p className="grocery-subtitle">
+          Here are the ingredients our AI recommends you to buy based on your pantry.
+        </p>
 
-      <section className="card" style={{ padding: "14px 16px" }}>
-        {items.length === 0 ? (
-          <p style={{ color: "var(--muted)", margin: 0 }}>
-            Your list is empty.
-          </p>
-        ) : (
-          <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
-            {items.map((item) => (
-              <li
-                key={item.id}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  padding: "10px 0",
-                  borderBottom: "1px solid var(--card-border)",
-                }}
-              >
-                <input
-                  type="checkbox"
-                  aria-label={`Mark ${item.label} as purchased`}
-                  onChange={() => handleCheck(item.id)}
-                  className="grocery__check"
-                  style={{
-                    width: 18,
-                    height: 18,
-                    border: "1px solid var(--card-border)",
-                    borderRadius: 4,
-                    appearance: "none",
-                    outline: "none",
-                    display: "grid",
-                    placeItems: "center",
-                    background: "#fff",
-                  }}
-                  onClick={(e) => {
-                    if (e.target.checked) {
-                      e.target.style.background = "var(--accent)";
-                      e.target.style.borderColor = "var(--accent)";
-                      e.target.style.color = "#fff";
-                      e.target.innerText = "✓";
-                    }
-                  }}
-                />
-                <span style={{ fontWeight: 600, letterSpacing: "-0.01em" }}>
-                  {item.label}
-                </span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+        <div className="grocery-card">
+          {items.length === 0 ? (
+            <p className="grocery-empty">Your list is empty.</p>
+          ) : (
+            <ul className="grocery-list">
+              {items.map((item) => (
+                <li key={item.id} className="grocery-item">
+                  <AnimatedCheckbox
+                    id={item.id}
+                    label={item.label}
+                    onChange={() => handleCheck(item.id)}
+                  />
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
     </main>
   );
 }

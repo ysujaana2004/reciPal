@@ -1,17 +1,16 @@
 import { Link, NavLink } from "react-router-dom";
-import "./index.css"; // using the same theme vars
+import "./index.css";
+import bread from "./assets/bread.png";
+import Button from "./Button";
 
 export default function Navbar() {
   return (
     <header className="navbar">
       <div className="navbar__container">
-        {/* Left: Logo / Brand */}
         <Link to="/" className="navbar__brand">
-          <span className="navbar__logo" aria-hidden>🍽️</span>
+        <img src={bread} alt="Bread Icon" className="login-image" />
           <span className="navbar__name">reciPal</span>
         </Link>
-
-        {/* Center: Nav links */}
         <nav className="navbar__nav">
           <NavLink to="/" end className="navbar__link">
             Home
@@ -25,14 +24,18 @@ export default function Navbar() {
           <NavLink to="/grocery" className="navbar__link">
             Grocery List
           </NavLink>
+          <NavLink to="/dashboard" className="navbar__link">
+            Dashboard
+          </NavLink>
         </nav>
-
-        {/* Right: Actions */}
         <div className="navbar__actions">
-          <Link to="/login" className="navbar__action">Login</Link>
-          <Link to="/user" className="navbar__avatar" aria-label="User Profile">🧑‍🍳</Link>
-        </div>
+            <Link to="/login">
+              <Button />
+            </Link>
+
+            </div>
       </div>
     </header>
+
   );
 }

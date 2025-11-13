@@ -1,0 +1,140 @@
+/* ===== Base ===== */
+.dashboard {
+  padding: 30px 20px;
+  max-width: 1100px;
+  margin: 0 auto;
+  color: #fff;
+  background: var(--bg);
+}
+
+.dash-section {
+  margin-bottom: 45px;
+}
+
+/* ===== Greeting ===== */
+.dash-hero {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.dash-title {
+  font-size: 38px;
+  font-weight: 800;
+  background: linear-gradient(120deg, #ffffff 10%, #f3b182 60%, #ffffff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.dash-subtitle {
+  font-size: 18px;
+  color: #d6cfcf;
+  margin-top: 6px;
+}
+
+/* ===== Quick Action Buttons ===== */
+.dash-quick-actions {
+  margin-top: 25px;
+  display: flex;
+  justify-content: center;
+  gap: 18px;
+  flex-wrap: wrap;
+}
+
+.dash-btn {
+  padding: 10px 18px;
+  background: #fec195;
+  border: 1px solid #f3b182;
+  border-radius: 12px;
+  font-weight: 600;
+  color: #181818;
+  transition: 0.2s ease;
+}
+
+.dash-btn:hover {
+  background: #f3b182;
+  transform: translateY(-2px);
+}
+
+/* ===== Stats ===== */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+  gap: 20px;
+}
+
+.dash-card {
+  background: #fec195;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  color: #181818;
+  text-align: center;
+}
+
+.dash-card h3 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.dash-number {
+  margin-top: 10px;
+  font-size: 28px;
+  font-weight: 700;
+}
+
+/* ===== List Items (Recent Recipes + Pantry) ===== */
+.dash-heading {
+  margin-bottom: 14px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #ffe4cf;
+}
+
+.dash-list {
+  background: #fec195;
+  border-radius: 14px;
+  padding: 8px 0;
+  box-shadow: var(--shadow);
+}
+
+.dash-list-item {
+  padding: 14px 20px;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.35);
+  color: #181818;
+}
+
+.dash-list-item:last-child {
+  border-bottom: none;
+}
+
+.dash-link {
+  font-weight: 600;
+  color: #b14a36;
+}
+
+.dash-link:hover {
+  text-decoration: underline;
+}
+
+/* ===== Pantry tags ===== */
+.dash-tag {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.dash-tag.low {
+  background: #ff8a8a;
+  color: #fff;
+}
+
+.dash-tag.good {
+  background: #a6e3a1;
+}
+
+.dash-tag.expiring {
+  background: #f5c26b;
+}

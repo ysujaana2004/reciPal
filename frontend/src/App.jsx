@@ -9,6 +9,8 @@ import Login from "./Login.jsx";
 import Signup from "./Signup.jsx";
 import NewRecipe from "./NewRecipe.jsx";
 import User from "./User.jsx";
+import Dashboard from "./DashboardChart.jsx";
+
 
 function App() {
   return (
@@ -25,6 +27,8 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<Signup />} />
         <Route path="/user" element={<User />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+
         {/* Optional placeholders for links shown on Home */}
         {/* Optional placeholders for links shown on Home */}
         {/* Optional placeholders for links shown on Home */}

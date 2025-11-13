@@ -1,9 +1,8 @@
-// src/Pantry.jsx
 import { useEffect, useRef, useState } from "react";
-import { Quagga } from "quagga";
+import "./Pantry.css";
 
 export default function Pantry() {
-  const [items, setItems] = useState([]);                 // [{id, title, brand, barcode}]
+  const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState("");
@@ -11,13 +10,11 @@ export default function Pantry() {
   const streamRef = useRef(null);
   const rafRef = useRef(0);
   const detectorRef = useRef(null);
-  
+  const [manualCode, setManualCode] = useState("");
 
-  // Start the camera + scanning loop
+  // Start camera scanning
   const startScan = async () => {
     setError("");
-
-    // Feature detect BarcodeDetector
     const supported =
       "BarcodeDetector" in window &&
       typeof window.BarcodeDetector === "function";
@@ -39,20 +36,21 @@ export default function Pantry() {
         audio: false,
       });
       streamRef.current = stream;
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
 
       setScanning(true);
-      scanLoop(); // kick off detection
+      scanLoop();
     } catch (e) {
       console.error(e);
       setError("Could not access the camera. Check permissions and try again.");
     }
   };
 
-  // Stop camera + loop
+  // Stop scanning
   const stopScan = () => {
     cancelAnimationFrame(rafRef.current);
     setScanning(false);
@@ -63,13 +61,12 @@ export default function Pantry() {
     }
   };
 
-  // Cleanup on unmount
+  // Cleanup
   useEffect(() => {
     return () => stopScan();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Continuous detection loop
+  // Detection loop
   const scanLoop = async () => {
     if (!videoRef.current || !detectorRef.current) return;
 
@@ -82,28 +79,26 @@ export default function Pantry() {
         return;
       }
     } catch (e) {
-      // Swallow intermittent decode errors; they’re normal during movement
+      // Ignore temporary decode errors
     }
     rafRef.current = requestAnimationFrame(scanLoop);
   };
 
-  // When a barcode is found, look it up and add to pantry
+  // Handle detected barcode
   const handleDetectedBarcode = async (barcode) => {
     const product = await mockLookup(barcode);
     const id = `${barcode}-${Date.now()}`;
     setItems((prev) => [{ id, barcode, ...product }, ...prev]);
   };
 
-  // Mock product lookup (replace with your DB or API)
+  // Mock product lookup
   async function mockLookup(barcode) {
-    // simple demo mapping
     const known = {
       "012345678905": { title: "Spaghetti Pasta", brand: "Barilla" },
       "04963406": { title: "Tomato Sauce", brand: "Hunt's" },
       "036000291452": { title: "All-Purpose Flour", brand: "King Arthur" },
     };
-    if (known[barcode]) return known[barcode];
-    return {
+    return known[barcode] || {
       title: `Item ${barcode.slice(-4)}`,
       brand: "Unknown Brand",
     };
@@ -118,8 +113,6 @@ export default function Pantry() {
       .includes(query.toLowerCase())
   );
 
-  // Manual add fallback for unsupported browsers
-  const [manualCode, setManualCode] = useState("");
   const addManual = async (e) => {
     e.preventDefault();
     if (!manualCode.trim()) return;
@@ -128,25 +121,32 @@ export default function Pantry() {
   };
 
   return (
-    <main className="page">
-      <div
-        className="page__head container"
-        style={{
-          display: "flex", // Use flexbox
-          justifyContent: "space-between", // Push content to the edges
-          alignItems: "flex-start", // Align items to the top
-          marginBottom: "2rem",
-        }}
-      >
-        {/* LEFT SIDE: Title, Subtitle, and Scan Button */}
-        <div>
+    <main className="page pantry-page">
+      <div className="container">
+        {/* Header */}
+        <div className="pantry-header">
           <h1 className="page__title">Your Pantry</h1>
           <p className="page__subtitle">
             Scan a barcode to add items. Search to quickly find what you have.
           </p>
-          
-          {/* Scan/Stop Button */}
-          <div style={{ display: "flex", gap: 10, marginTop: '1rem' }}>
+
+          {/* Search bar */}
+          <section className="search-section">
+            <div className="searchbar">
+              <span className="searchbar__icon" aria-hidden="true">
+                🔎
+              </span>
+              <input
+                className="searchbar__input"
+                placeholder="Search pantry…"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+              />
+            </div>
+          </section>
+
+          {/* Scan / Stop Button */}
+          <div className="scan-controls">
             {!scanning ? (
               <button className="btn btn--solid" onClick={startScan}>
                 📷 Scan Barcode
@@ -159,159 +159,73 @@ export default function Pantry() {
           </div>
         </div>
 
-        {/* RIGHT SIDE: Search bar - NOW INSIDE THE HEADER DIV */}
-        <section
-          // Removed the problematic large marginTop
-          style={{ width: '250px', padding: 0, marginTop: '7.9rem' }} 
-        >
-          <div
-            className="searchbar"
-            style={{
-              display: "flex",
-              alignItems: "center",
-              border: "1px solid #e0e0e0",
-              borderRadius: "25px", // Fully rounded
-              padding: "0.5rem 1rem",
-              backgroundColor: "#ffffff",
-              boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)", // Subtle lift
-              width: "100%",
-            }}
-          >
-            <span
-              className="searchbar__icon"
-              aria-hidden
-              style={{
-                marginRight: "0.75rem",
-                fontSize: "1.2rem",
-                color: "#757575",
-              }}
-            >
-              🔎
-            </span>
-            <input
-              className="searchbar__input"
-              placeholder="Search pantry…"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              style={{
-                border: "none",
-                outline: "none",
-                background: "transparent",
-                padding: 0,
-                fontSize: "1rem",
-                color: "#333",
-                width: "100%",
-              }}
-            />
-          </div>
-        </section>
-      </div>
-      
-  
-
-      {/* Scanner preview + errors */}
-      {(scanning || error) && (
-        <section className="container" style={{ marginBottom: 10 }}>
-          {scanning && (
-            <div
-              className="card"
-              style={{
-                overflow: "hidden",
-                padding: 0,
-                borderRadius: "16px",
-              }}
-            >
-              <video
-  ref={videoRef}
-  autoPlay
-  playsInline
-  muted
-  style={{ width: "100%", maxHeight: 360, objectFit: "cover", background: "#000" }}
-/>
-
-<div className="camera">
-
-</div>
-
-
-
-
+        {/* Scanner preview */}
+        {scanning && (
+          <section className="scanner-section">
+            <div className="card scanner-card">
+              <video ref={videoRef} autoPlay playsInline muted />
             </div>
-          )}
-          {error && (
-            <p style={{ color: "var(--accent)", marginTop: 10 }}>{error}</p>
-          )}
-        </section>
-      )}
+          </section>
+        )}
 
-      {/* Manual add (fallback) */}
-      {error && (
-        <section className="container" style={{ marginBottom: 24 }}>
-          <form
-            onSubmit={addManual}
-            className="card"
-            style={{
-              display: "flex",
-              gap: 10,
-              alignItems: "center",
-              padding: 12,
-            }}
-          >
-            <input
-              className="searchbar__input"
-              placeholder="Enter barcode manually"
-              value={manualCode}
-              onChange={(e) => setManualCode(e.target.value)}
-            />
-            <button className="btn btn--solid sm" type="submit">
-              Add
-            </button>
-          </form>
-        </section>
-      )}
-
-      {/* Pantry list */}
-      <section className="grid container" style={{ paddingBottom: 56 }}>
-        {filtered.length === 0 ? (
-          <div className="card" style={{ gridColumn: "1 / -1" }}>
-            {items.length === 0 ? (
-              <p style={{ margin: 0, color: "var(--muted)" }}>
-                Your pantry is empty. Click <b>Scan Barcode</b> to add your first
-                item.
-              </p>
-            ) : (
-              <p style={{ margin: 0, color: "var(--muted)" }}>
-                No items match “{query}”.
-              </p>
-            )}
+        {/* Error */}
+        {error && (
+          <div className="error-section">
+            <p className="error-message">{error}</p>
           </div>
-        ) : (
-          filtered.map((it) => (
-            <article key={it.id} className="card" style={{ gridColumn: "span 12" }}>
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  gap: 12,
-                }}
-              >
-                <div>
-                  <h3 style={{ margin: "0 0 4px" }}>{it.title}</h3>
-                  <p style={{ margin: 0, color: "var(--muted)", fontSize: 14 }}>
-                    {it.brand || "—"} • <span>Barcode: {it.barcode}</span>
-                  </p>
-                </div>
-                <div style={{ display: "flex", gap: 8 }}>
-                  <button className="btn btn--ghost sm" onClick={() => removeItem(it.id)}>
+        )}
+
+        {/* Manual Add */}
+        {error && (
+          <section className="manual-add">
+            <form onSubmit={addManual} className="card manual-form">
+              <input
+                className="searchbar__input"
+                placeholder="Enter barcode manually"
+                value={manualCode}
+                onChange={(e) => setManualCode(e.target.value)}
+              />
+              <button className="btn btn--solid sm" type="submit">
+                Add
+              </button>
+            </form>
+          </section>
+        )}
+
+        {/* Pantry Items */}
+        <section className="pantry-grid">
+          {filtered.length === 0 ? (
+            <div className="card empty-state">
+              {items.length === 0 ? (
+                <p>
+                  Your pantry is empty. Click <b>Scan Barcode</b> to add your first item.
+                </p>
+              ) : (
+                <p className="empty-message">No items match "{query}".</p>
+              )}
+            </div>
+          ) : (
+            filtered.map((it) => (
+              <article key={it.id} className="card pantry-item">
+                <div className="pantry-item__content">
+                  <div className="pantry-item__info">
+                    <h3>{it.title}</h3>
+                    <p>
+                      {it.brand || "—"} • <span>Barcode: {it.barcode}</span>
+                    </p>
+                  </div>
+                  <button
+                    className="btn btn--ghost sm"
+                    onClick={() => removeItem(it.id)}
+                  >
                     Remove
                   </button>
                 </div>
-              </div>
-            </article>
-          ))
-        )}
-      </section>
+              </article>
+            ))
+          )}
+        </section>
+      </div>
     </main>
   );
 }
