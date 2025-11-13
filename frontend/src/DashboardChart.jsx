@@ -1,5 +1,9 @@
 import { Link } from "react-router-dom";
 import "./DashboardChart.css";
+import Addreci from "./AddReci.jsx";
+import ScanPantry from "./ScanPantry.jsx";
+import GroceryButton from "./GroceryButton.jsx";
+
 
 export default function Dashboard() {
   const username = "Osama"; // Replace with real user data from backend later
@@ -13,9 +17,24 @@ export default function Dashboard() {
         </p>
 
         <div className="dash-quick-actions">
-          <Link to="/recipes" className="dash-btn">+ Add Recipe</Link>
+           <div className="navbar__actions">
+            <Link to="/recipes">
+              <Addreci />
+            </Link>
+            </div>
+            <div className="navbar__actions">
+            <Link to="/pantry">
+              <ScanPantry />
+            </Link>
+            </div>
+            <div className="navbar__actions">
+            <Link to="/grocery">
+              <GroceryButton />
+            </Link>
+            </div>
+         {/* <Link to="/recipes" className="dash-btn">+ Add Recipe</Link>
           <Link to="/pantry" className="dash-btn">Scan Pantry</Link>
-          <Link to="/grocery" className="dash-btn">View Grocery List</Link>
+          <Link to="/grocery" className="dash-btn">View Grocery List</Link>*/}
         </div>
       </section>
 

@@ -46,18 +46,19 @@ const StyledWrapper = styled.div`
     display: flex;
     align-items: center;
     cursor: pointer;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     font-size: 16px;
-    color: #ffffffff;
+    color: #000000ff;
     font-weight: 500;
     transition: all 0.2s ease;
     padding: 8px;
     border-radius: 8px;
-  }
+    font-family: Verdana;
+    text-transform: capitalize;
+    }
 
   .checkbox-label:hover {
-    background: rgba(16, 185, 129, 0.05);
-    color: #111827;
+    /*background: black;*/
+    color: #0b3b0cff;
   }
 
   .checkbox-box {
@@ -126,7 +127,7 @@ const StyledWrapper = styled.div`
     left: 0;
     height: 2px;
     width: 0;
-    background: #6b7280;
+    background: #151212ff;
     transform: translateY(-50%);
     transition: width 0.4s ease;
   }
