@@ -43,17 +43,19 @@ const StyledWrapper = styled.div`
   justify-content: center;
   align-items: center;
   width: 100%;       
-  margin-top: 40px;  
+  margin-top: -10px;  
+  padding-bottom: 40px;
 
 button {
     position: relative;
     padding: 15px 45px;
-    background: #fec195;
+    /*background: #fec195;*/
+    background: linear-gradient(120deg, #bf8c35ff, #bf8c35ff, #D0D9C7, #D0D9C7 100%);
     font-size: 18px;
     font-weight: 600;
     color: #181818;
     cursor: pointer;
-    border: 1px solid #fec195;
+    border: 1px solid #bf8c35ff;
     border-radius: 8px;
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));
     }
@@ -63,11 +65,11 @@ button {
     border: 1px solid #f3b182;
     background: linear-gradient(
       85deg,
-      #fec195,
-      #fcc196,
-      #fabd92,
-      #fac097,
-      #fac39c
+      #bf8c35ff,
+      #bf8c35ff,
+      #ffffffff,
+      #ffffffff,
+      #ffffffff
     );
     animation: wind 2s ease-in-out infinite;
   }

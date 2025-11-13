@@ -42,25 +42,26 @@ const StyledWrapper = styled.div`
   button {
     position: relative;
     padding: 15px 45px;
-    background: #fec195;
+    /*background: linear-gradient(120deg, #bf8c35ff, #bf8c35ff, #bf8c35ff, #000000ff 100%);*/
+    background: linear-gradient(120deg, #bf8c35ff, #bf8c35ff, #D0D9C7, #D0D9C7 100%);
     font-size: 18px;
     font-weight: 600;
-    color: #181818;
+    color: #000000ff;
     cursor: pointer;
-    border: 1px solid #fec195;
+    border: 1px solid #bf8c35ff;
     border-radius: 8px;
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));
   }
 
   button:hover {
-    border: 1px solid #f3b182;
+    border: 1px solid #bf8c35ff;
     background: linear-gradient(
       85deg,
-      #fec195,
-      #fcc196,
-      #fabd92,
-      #fac097,
-      #fac39c
+      #bf8c35ff,
+      #bf8c35ff,
+      #ffffffff,
+      #ffffffff,
+      #ffffffff
     );
     animation: wind 2s ease-in-out infinite;
   }

@@ -1,6 +1,8 @@
 import { Link } from "react-router-dom";
 import Button from "./ButtonH";
 import waffle from "./assets/pic.png";
+import cat from "./assets/cat.png";
+import Footer from "./Footer";
 
 
 export default function Home() {
@@ -23,7 +25,9 @@ export default function Home() {
           cooking journey effortless and enjoyable.
         </p>
 
-        
+         <div className="image-container-cat">
+          <img src={cat} alt="cat pic" className="cat-image" />
+        </div> 
          <div className="navbar__actions">
             <Link to="/login">
               <Button />
@@ -75,6 +79,7 @@ export default function Home() {
 
         </div>
       </section>
+      <Footer />
     </main>
   );
 }
