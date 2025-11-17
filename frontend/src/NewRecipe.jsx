@@ -91,7 +91,7 @@ export default function NewRecipe() {
               // Reset default input styles
               outline: "none",
               fontSize: "1rem",
-              color: "#333",
+              color: "#bf2929ff",
 
             }}
           />

@@ -20,15 +20,18 @@
 .dash-title {
   font-size: 38px;
   font-weight: 800;
-  background: linear-gradient(120deg, #ffffff 10%, #f3b182 60%, #ffffff 100%);
+  background-color: #181818;
+  /*background: linear-gradient(120deg, #ffffff 10%, #f3b182 60%, #ffffff 100%);*/
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
 .dash-subtitle {
   font-size: 18px;
-  color: #d6cfcf;
+  color: #bf8c35ff;
   margin-top: 6px;
+  text-transform: capitalize;
+  font-weight: 600;
 }
 
 /* ===== Quick Action Buttons ===== */
@@ -42,7 +45,7 @@
 
 .dash-btn {
   padding: 10px 18px;
-  background: #fec195;
+  background: linear-gradient(120deg, #fec195, #fec195, #D0D9C7, #D0D9C7 100%);
   border: 1px solid #f3b182;
   border-radius: 12px;
   font-weight: 600;
@@ -63,11 +66,12 @@
 }
 
 .dash-card {
-  background: #fec195;
+  /*background: linear-gradient(120deg, #fec195, #fec195, #D0D9C7, #D0D9C7 100%);*/
+  background-color: #bf8c35ff;
   padding: 20px;
   border-radius: 14px;
   box-shadow: var(--shadow);
-  color: #181818;
+  color: rgb(0, 0, 0);
   text-align: center;
 }
 
@@ -87,11 +91,11 @@
   margin-bottom: 14px;
   font-size: 24px;
   font-weight: 700;
-  color: #ffe4cf;
+  color: #000000;
 }
 
 .dash-list {
-  background: #fec195;
+  background: #bf8c35ff;
   border-radius: 14px;
   padding: 8px 0;
   box-shadow: var(--shadow);
@@ -104,14 +108,16 @@
   border-bottom: 1px solid rgba(255, 255, 255, 0.35);
   color: #181818;
 }
-
+.dash-tag-item {
+    color: white
+}
 .dash-list-item:last-child {
   border-bottom: none;
 }
 
 .dash-link {
   font-weight: 600;
-  color: #b14a36;
+  color: #000000;
 }
 
 .dash-link:hover {
@@ -127,14 +133,14 @@
 }
 
 .dash-tag.low {
-  background: #ff8a8a;
+  background: #d31d1d;
   color: #fff;
 }
 
 .dash-tag.good {
-  background: #a6e3a1;
+  background: #324c30;
 }
 
 .dash-tag.expiring {
-  background: #f5c26b;
+  background: #ffe6ba;
 }

@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
-import Button from "./ButtonH";
-import waffle from "./assets/pic.png";
-import cat from "./assets/cat.png";
-import Footer from "./Footer";
+import Button from "../Buttons/ButtonH";
+import waffle from "../assets/pic.png";
+import cat from "../assets/cat.png";
+import Footer from "../Footer/Footer";
 
 
 export default function Home() {

@@ -1,15 +1,15 @@
 import { Routes, Route } from "react-router-dom";
-import Navbar from "./Navbar";
-import Home from "./Home";
-import Recipes from "./Recipes.jsx";
-import Pantry from "./Pantry.jsx";
-import GroceryList from "./GroceryList.jsx";
-import RecipeCard from "./RecipeCard.jsx";
-import Login from "./Login.jsx";
-import Signup from "./Signup.jsx";
-import NewRecipe from "./NewRecipe.jsx";
-import User from "./User.jsx";
-import Dashboard from "./DashboardChart.jsx";
+import Navbar from "../Navbar/Navbar.jsx";
+import Home from "../Home/Home.jsx";
+import Recipes from "../Recipes/Recipes.jsx";
+import Pantry from "../Pantry/Pantry.jsx";
+import GroceryList from "../Grocery List/GroceryList.jsx";
+import RecipeCard from "../RecipeCard.jsx";
+import Login from "../Login/Login.jsx";
+import Signup from "../Signup.jsx";
+import NewRecipe from "../NewRecipe.jsx";
+import User from "../User.jsx";
+import Dashboard from "../Dashboard/DashboardChart.jsx";
 
 
 function App() {

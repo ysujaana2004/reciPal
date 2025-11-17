@@ -3,7 +3,7 @@
 
 /* ===== Root theme ===== */
 :root{
-  --bg: #ffffff;             /* warm off-white */
+  --bg: #D0D9C7;             /* warm off-white */
   --surface: #ffffff;
   --muted: #bd6767;
   --text: #1d1d1f;
@@ -86,7 +86,9 @@ img{ max-width: 100%; display: block }
   margin: 10px 0 14px;
   letter-spacing: -0.02em;
   font-weight: 800;
-  background: linear-gradient(120deg,#bf8c35ff 30%, #bf8c35ff 35%, #6D7356, #6D7356 100%);
+  background-color: #000000;
+  /*background: linear-gradient(120deg, rgb(0, 0, 0) 30%, rgb(0, 0, 0) 35%, #bf8c35ff, #bf8c35ff 100%);
+  /*background: linear-gradient(120deg,#bf8c35ff 30%, #bf8c35ff 35%, #6D7356, #6D7356 100%);*/
   /*background: linear-gradient(120deg, #ffffff 0%, #ffffff 35%, #f3b182 70%, #feffff 100%);*/
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -100,7 +102,7 @@ img{ max-width: 100%; display: block }
   max-width: 760px;
   color: var(--muted);
   font-size: clamp(15px, 1.9vw, 18px);
-  color: #f3b182;
+  color: #000000;
 }
 
 .hero__cta{
@@ -152,7 +154,7 @@ img{ max-width: 100%; display: block }
   margin: 6px 0 6px;
   font-size: clamp(22px, 2.5vw, 28px);
   font-weight: 800;
-  color: #cae0d8;
+  color: #000000;
   font-family: Verdana;
 }
 
@@ -161,9 +163,11 @@ img{ max-width: 100%; display: block }
   color: var(--muted);
   margin: 0 auto 24px;
   max-width: 760px;
-  padding: 0 20px;
-  color:#a8c3b9;
+  padding: 10 30px;
+  color:#bf8c35ff;
   font-size: clamp(15px, 1.9vw, 18px);
+  font-weight: 500;
+  padding-top: 20px;
 
 }
 
@@ -178,8 +182,12 @@ img{ max-width: 100%; display: block }
 
 }
 .features .card {
-  background: linear-gradient(120deg, #a8c3b9 0%, #a8c3b9 35%, #a8c3b9 70%, #feffff 100%);
-  border: 2px solid #fff;
+  background: rgb(255, 255, 255);
+  
+  /*background: linear-gradient(120deg, #fec195, #fec195, #D0D9C7, #D0D9C7 100%);
+  border: 2px solid #fff;*/
+  box-shadow:#bf8c35ff 6px 6px;
+
 }
 
 .card{
@@ -284,12 +292,15 @@ body.has-fixed-navbar main{
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 800;
+  font-weight: 700;
   font-size: 30px;
-  background: linear-gradient(120deg, rgb(0, 0, 0) 30%, rgb(0, 0, 0) 35%, #bf8c35ff, #bf8c35ff 100%);
+  color: rgb(0, 0, 0);
+
+  /*background: linear-gradient(120deg, rgb(0, 0, 0) 30%, rgb(0, 0, 0) 35%, #bf8c35ff, #bf8c35ff 100%);
   -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  font-family: Verdana, Geneva, Tahoma, sans-serif;
+  -webkit-text-fill-color: transparent;*/
+  font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+  text-decoration:var(--surface);
 
 }
 
@@ -311,7 +322,8 @@ body.has-fixed-navbar main{
   font-weight: bold;
   color: var(--muted);
   transition: color 0.2s ease;
-  background: linear-gradient(120deg, rgb(0, 0, 0) 30%, rgb(0, 0, 0) 35%, #bf8c35ff, #bf8c35ff 100%);
+  background-color: #000000;
+  /*background: linear-gradient(120deg, rgb(0, 0, 0) 30%, rgb(0, 0, 0) 35%, #bf8c35ff, #bf8c35ff 100%);
   /*background: linear-gradient(120deg, #ffffff 0%, #ffffff 35%, #f3b182 70%, #f3b182 100%);*/
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;

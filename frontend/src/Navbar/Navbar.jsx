@@ -1,7 +1,7 @@
 import { Link, NavLink } from "react-router-dom";
-import "./index.css";
-import bread from "./assets/bread.png";
-import Button from "./Button";
+import "../Home/index.css";
+import bread from "../assets/bread.png";
+import Button from "../Buttons/Button";
 
 export default function Navbar() {
   return (

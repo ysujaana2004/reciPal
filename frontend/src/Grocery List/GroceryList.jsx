@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./GroceryList.css";
 import AnimatedCheckbox from "./card.jsx"; 
+import Footer from "../Footer/Footer.jsx";
 
 export default function GroceryList() {
   const [items, setItems] = useState([]);
@@ -60,4 +61,5 @@ useEffect(() => {
       </div>
     </main>
   );
+  <Footer />
 }

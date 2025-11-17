@@ -5,7 +5,7 @@ const Button = () => {
   return (
     <StyledWrapper>
       <button>
-        + Add Recipe
+        Explore Recipes
         <div className="icon-1">
           <svg xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.3 65.33" style={{shapeRendering: 'geometricPrecision', textRendering: 'geometricPrecision', imageRendering: 'optimizeQuality', fillRule: 'evenodd', clipRule: 'evenodd'}} version="1.1" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
             <defs />
@@ -39,31 +39,37 @@ const Button = () => {
 }
 
 const StyledWrapper = styled.div`
-padding-bottom: 25px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;       
+  margin-top: -10px;  
+  padding-bottom: 40px;
 
 button {
     position: relative;
     padding: 15px 45px;
-    background: #fec195;
+    background: #bf8c35ff;
+    /*background: linear-gradient(120deg, #fec195, #fec195, #D0D9C7, #D0D9C7 100%);*/
     font-size: 18px;
     font-weight: 600;
     color: #181818;
     cursor: pointer;
-    border: 1px solid #fec195;
+    border: 1px solid #bf8c35ff;
     border-radius: 8px;
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));
     }
 
 
   button:hover {
-    border: 1px solid #f3b182;
+    border: 1px solid #bf8c35ff;
     background: linear-gradient(
       85deg,
-      #fec195,
-      #fcc196,
-      #fabd92,
-      #fac097,
-      #fac39c
+      #bf8c35ff,
+      #bf8c35ff,
+      #ffffffff,
+      #ffffffff,
+      #ffffffff
     );
     animation: wind 2s ease-in-out infinite;
   }

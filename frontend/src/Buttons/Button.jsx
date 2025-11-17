@@ -43,7 +43,8 @@ const StyledWrapper = styled.div`
     position: relative;
     padding: 15px 45px;
     /*background: linear-gradient(120deg, #bf8c35ff, #bf8c35ff, #bf8c35ff, #000000ff 100%);*/
-    background: linear-gradient(120deg, #bf8c35ff, #bf8c35ff, #D0D9C7, #D0D9C7 100%);
+    /*background: linear-gradient(120deg, #fec195, #fec195, #D0D9C7, #D0D9C7 100%);*/
+    background: #bf8c35ff;
     font-size: 18px;
     font-weight: 600;
     color: #000000ff;

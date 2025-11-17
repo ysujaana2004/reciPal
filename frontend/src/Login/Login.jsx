@@ -1,6 +1,7 @@
 import React from "react";
 import styled from "styled-components";
-import bread from "./assets/bread.png";
+import bread from "../assets/bread.png";
+import Footer from "../Footer/Footer";
 
 const Form = () => {
   return (
@@ -45,6 +46,7 @@ const Form = () => {
       </div>
     </StyledWrapper>
   );
+    <Footer />
 };
 
 const StyledWrapper = styled.div`
@@ -52,7 +54,7 @@ const StyledWrapper = styled.div`
   justify-content: center;
   align-items: center;
   height: 100vh; /* Centers vertically */
-  background-color: #555951; /* matches your project theme */
+  background-color: #D0D9C7; /* matches your project theme */
   perspective: 1200px; 
 
   .container {

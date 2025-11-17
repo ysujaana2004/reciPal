@@ -5,7 +5,7 @@ const Button = () => {
   return (
     <StyledWrapper>
       <button>
-        Explore Recipes
+        View Grocery List
         <div className="icon-1">
           <svg xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.3 65.33" style={{shapeRendering: 'geometricPrecision', textRendering: 'geometricPrecision', imageRendering: 'optimizeQuality', fillRule: 'evenodd', clipRule: 'evenodd'}} version="1.1" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
             <defs />
@@ -39,18 +39,14 @@ const Button = () => {
 }
 
 const StyledWrapper = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;       
-  margin-top: -10px;  
-  padding-bottom: 40px;
+padding-bottom: 25px;
 
 button {
     position: relative;
     padding: 15px 45px;
-    /*background: #fec195;*/
-    background: linear-gradient(120deg, #bf8c35ff, #bf8c35ff, #D0D9C7, #D0D9C7 100%);
+    background: #bf8c35ff;
+    /*background: linear-gradient(120deg, #fec195, #fec195, #D0D9C7, #D0D9C7 100%);*/
+
     font-size: 18px;
     font-weight: 600;
     color: #181818;
@@ -62,7 +58,7 @@ button {
 
 
   button:hover {
-    border: 1px solid #f3b182;
+    border: 1px solid #bf8c35ff;
     background: linear-gradient(
       85deg,
       #bf8c35ff,

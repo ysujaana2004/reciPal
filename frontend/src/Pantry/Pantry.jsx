@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import "./Pantry.css";
+import Footer from "../Footer/Footer";
 
 export default function Pantry() {
   const [items, setItems] = useState([]);

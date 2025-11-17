@@ -1,8 +1,9 @@
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { getAllRecipes } from "../api_funcs/recipes.js";
+import { getAllRecipes } from "../../api_funcs/recipes.js";
 import "./Recipes.css"
-import Addreci from "./AddReci.jsx";
+import Addreci from "../Buttons/AddReci.jsx";
+import Footer from "../Footer/Footer.jsx";
 
 
 export default function Recipes() {

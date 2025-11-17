@@ -3,7 +3,7 @@
 .searchbar {
   display: flex;
   align-items: center;
-  background: rgba(157, 32, 32, 0.15);
+  background: black;
   width: 250px;      /* stays left, does NOT stretch */
   padding: 0.4rem 1rem;
   border-radius: 6px;   /* rectangular */
@@ -12,8 +12,8 @@
 
 .searchbar__input {
   display: block;
-  color: rgb(95, 6, 6);
-  background: linear-gradient(142.99deg, rgba(217, 217, 217, 0.63) 15.53%, rgba(243, 243, 243, 0.63) 88.19%);
+  color: rgb(0, 0, 0);
+  /*background: linear-gradient(142.99deg, rgba(35, 10, 10, 0.63) 15.53%, rgba(243, 243, 243, 0.63) 88.19%);*/
   /*box-shadow: 0px 12px 24px -1px rgba(0, 0, 0, 0.18);*/
   border: none;
   margin: 0 2px;
@@ -40,14 +40,15 @@
   font-weight: 800;
   margin-bottom: 0.5rem;
   text-align: left;
-  background: linear-gradient(120deg, #f3b182 0%, #ffffff 35%, #f3b182 70%, #ffffff 100%);
+  background: linear-gradient(120deg, #000000 0%, #000000 35%, #000000 70%, #000000 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  color: black;
   font-family: Verdana, Geneva, Tahoma, sans-serif;  
 }
 .page__subtitle {
   font-size: 1.0rem;
-  color: #fffcfc;
+  color: black;
   margin-bottom: 1.5rem;
   text-align: left;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;

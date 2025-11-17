@@ -1,8 +1,8 @@
 import { Link } from "react-router-dom";
 import "./DashboardChart.css";
-import Addreci from "./AddReci.jsx";
-import ScanPantry from "./ScanPantry.jsx";
-import GroceryButton from "./GroceryButton.jsx";
+import Addreci from "../Buttons/AddReci.jsx";
+import ScanPantry from "../Buttons/ScanPantry.jsx";
+import GroceryButton from "../Buttons/GroceryButton.jsx";
 
 
 export default function Dashboard() {
