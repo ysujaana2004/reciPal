@@ -1,5 +1,8 @@
 // FastAPI mounts the recipes router at /recipes (see app/main.py)
-const BASE = "http://127.0.0.1:8000/recipes";
+// const BASE = "http://127.0.0.1:8000/recipes";
+
+const API_BASE = import.meta.env.VITE_API_URL; // e.g. https://your-backend.onrender.com
+const BASE = `${API_BASE.replace(/\/$/, "")}/recipes`;
 
 async function request(
   path,
