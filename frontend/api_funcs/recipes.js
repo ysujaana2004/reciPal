@@ -1,4 +1,5 @@
-const BASE = "http://127.0.0.1:8000/api/recipes";
+// FastAPI mounts the recipes router at /recipes (see app/main.py)
+const BASE = "http://127.0.0.1:8000/recipes";
 
 async function request(
   path,
@@ -38,31 +39,28 @@ async function request(
 
 // ---------- Endpoints (no auth) ----------
 
-// GET /api/recipes/get/<title>  -> returns raw recipe.data JSON
+// GET /recipes/<id>  -> returns full recipe record with its ingredients
 export function getRecipeById(id, opts) {
-  return request(`/get/${encodeURIComponent(id)}`, opts);
+  return request(`/${encodeURIComponent(id)}`, opts);
 }
 
-// GET /api/recipes/get/search/<title> -> returns array of RecipeSerializer items
+// Placeholder: backend search endpoint hasn't been implemented yet
 export function searchRecipesByTitle(query, opts) {
-  return request(`/get/search/${encodeURIComponent(query)}`, opts);
+  return request(`/search/${encodeURIComponent(query)}`, opts);
 }
 
-// GET /api/recipes/get/all/ -> returns all recipes (RecipeSerializer[])
+// GET /recipes/ -> returns all recipes for the authenticated user
 export function getAllRecipes(opts) {
-  return request(`/get/all/`, opts);
+  return request(`/`, opts);
 }
 
-// POST /api/recipes/create  Body: { reel_url: "https://instagram.com/reel/..." }
+// POST /recipes/extract?url=<video_url>
 export function createRecipeFromReel(reelUrl, opts) {
-  return request(`/create`, {
-    method: "POST",
-    body: { reel_url: reelUrl },
-    ...opts,
-  });
+  const urlParam = encodeURIComponent(reelUrl);
+  return request(`/extract?url=${urlParam}`, { method: "POST", ...opts });
 }
 
-// PUT /api/recipes/edit  Body: { title, data: {...} } -> replaces JSON fully
+// POST /recipes/edit -> placeholder for compatibility with older UI pieces
 export function editRecipe(id, dataObj, opts) {
   return request(`/edit`, {
     method: "POST",
