@@ -22,7 +22,10 @@ yt-dlp
 google-generativeai
 
 # ---------- Streamlit Frontend ----------
-streamlit
+# streamlit
 
 # ---------- Utilities ----------
 pydantic
+
+# other 
+python-multipart
