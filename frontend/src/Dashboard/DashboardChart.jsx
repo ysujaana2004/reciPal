@@ -6,7 +6,7 @@ import GroceryButton from "../Buttons/GroceryButton.jsx";
 
 
 export default function Dashboard() {
-  const username = "Osama"; // Replace with real user data from backend later
+  const username = "Fatema"; // Replace with real user data from backend later
 
   return (
     <main className="dashboard">
