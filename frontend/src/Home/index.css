@@ -199,7 +199,6 @@ img{ max-width: 100%; display: block }
   padding: 18px 18px 14px;
   transition: border-color .2s ease, transform .06s ease, box-shadow .2s ease;
   background-color: #a8c3b9;
-  margin-top: -200px;
 }
 
 .card:hover{

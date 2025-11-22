@@ -53,3 +53,17 @@
   text-align: left;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
+
+/* Override global card/grid defaults so recipe cards don't overlap the header */
+.grid--recipes {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 16px;
+  width: 100%;
+  margin-top: 12px;
+}
+
+.grid--recipes .card {
+  margin-top: 0; /* cancel the negative margin from the global .card */
+  background: #fff;
+}
