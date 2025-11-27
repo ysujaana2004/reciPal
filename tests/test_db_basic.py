@@ -147,13 +147,18 @@ class RecipeClient:
             print(f"Error: {e}")
             return False
 
-    def list_recipes(self) -> list:
-        """Get all recipes for the logged-in user."""
+    def list_recipes(self, ingredient: str = None) -> list:
+        """Get all recipes for the logged-in user.
+        
+        Args:
+            ingredient: Optional ingredient to filter by
+        """
         try:
-            response = requests.get(
-                f"{BASE_URL}/recipes/",
-                headers=self.get_headers()
-            )
+            url = f"{BASE_URL}/recipes/"
+            if ingredient:
+                url += f"?ingredient={ingredient}"
+            
+            response = requests.get(url, headers=self.get_headers())
             if response.status_code == 200:
                 return response.json()
             else:
@@ -293,6 +298,26 @@ class RecipeClient:
             print(f"Error: {e}")
             return None
 
+    def get_grocery_recommendations(self) -> list:
+        """Get grocery recommendations based on pantry and recipes."""
+        try:
+            response = requests.get(
+                f"{BASE_URL}/grocery/recommendations",
+                headers=self.get_headers()
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Failed to get recommendations (Status {response.status_code}):")
+                try:
+                    print(f"  {response.json().get('detail', 'Unknown error')}")
+                except:
+                    print(f"  Response: {response.text[:200]}")
+                return []
+        except Exception as e:
+            print(f"Error: {e}")
+            return []
+
 
 def show_dummy_recipes():
     """Display available dummy recipes."""
@@ -304,16 +329,22 @@ def show_dummy_recipes():
     print("="*60)
 
 
-def show_user_recipes(client: RecipeClient):
-    """Display all user's recipes."""
-    recipes = client.list_recipes()
+def show_user_recipes(client: RecipeClient, ingredient: str = None):
+    """Display all user's recipes, optionally filtered by ingredient."""
+    recipes = client.list_recipes(ingredient=ingredient)
     
     if not recipes:
-        print("\n📭 You have no recipes yet.")
+        if ingredient:
+            print(f"\n📭 No recipes found with '{ingredient}'.")
+        else:
+            print("\n📭 You have no recipes yet.")
         return
     
     print("\n" + "="*60)
-    print("Your Recipes:")
+    if ingredient:
+        print(f"Recipes containing '{ingredient}':")
+    else:
+        print("Your Recipes:")
     print("="*60)
     for recipe in recipes:
         print(f"ID: {recipe['id']:4d} | {recipe['title']}")
@@ -370,6 +401,30 @@ def show_recipe_check_result(result: dict):
         print("  (none)")
     
     print("="*60)
+
+
+def show_grocery_recommendations(recommendations: list):
+    """Display grocery recommendations."""
+    if not recommendations:
+        print("\n🎉 You have everything you need! No grocery recommendations.")
+        return
+    
+    print("\n" + "="*60)
+    print("🛒 Grocery Recommendations")
+    print("="*60)
+    print("Buy these ingredients to unlock more recipes:")
+    print("-" * 60)
+    
+    for i, rec in enumerate(recommendations[:10], 1):  # Show top 10
+        ingredient = rec['ingredient']
+        unlocks = rec['unlocks']
+        print(f"{i:2d}. {ingredient:25s} → unlocks {unlocks} recipe(s)")
+    
+    if len(recommendations) > 10:
+        print(f"\n... and {len(recommendations) - 10} more")
+    
+    print("="*60)
+    print(f"Total recommendations: {len(recommendations)}")
 
 
 def main():
@@ -436,18 +491,21 @@ def main():
         print("RECIPES:")
         print("  1. Add a dummy recipe")
         print("  2. View all my recipes")
-        print("  3. Delete a recipe")
+        print("  3. Search recipes by ingredient")
+        print("  4. Delete a recipe")
         print("\nPANTRY:")
-        print("  4. Add pantry item")
-        print("  5. View my pantry")
-        print("  6. Update pantry item")
-        print("  7. Delete pantry item")
+        print("  5. Add pantry item")
+        print("  6. View my pantry")
+        print("  7. Update pantry item")
+        print("  8. Delete pantry item")
         print("\nCHECK:")
-        print("  8. Check if I can make a recipe")
-        print("\n  9. Logout")
+        print("  9. Check if I can make a recipe")
+        print("\nGROCERY:")
+        print(" 10. Get grocery recommendations")
+        print("\n 11. Logout")
         print("="*60)
         
-        choice = input("\nEnter your choice (1-9): ").strip()
+        choice = input("\nEnter your choice (1-11): ").strip()
         
         if choice == "1":
             # Add dummy recipe
@@ -471,6 +529,12 @@ def main():
             show_user_recipes(client)
         
         elif choice == "3":
+            # Search recipes by ingredient
+            ingredient = input("\nEnter ingredient to search for: ").strip()
+            if ingredient:
+                show_user_recipes(client, ingredient=ingredient)
+        
+        elif choice == "4":
             # Delete recipe
             show_user_recipes(client)
             if client.list_recipes():  # Only ask if there are recipes
@@ -487,7 +551,7 @@ def main():
                 except ValueError:
                     print("Invalid recipe ID!")
         
-        elif choice == "4":
+        elif choice == "5":
             # Add pantry item
             print("\n--- Add Pantry Item ---")
             ingredient = input("Ingredient name: ").strip()
@@ -498,11 +562,11 @@ def main():
             except ValueError:
                 print("Invalid quantity!")
         
-        elif choice == "5":
+        elif choice == "6":
             # View pantry
             show_pantry_items(client)
         
-        elif choice == "6":
+        elif choice == "7":
             # Update pantry item
             show_pantry_items(client)
             if client.list_pantry_items():
@@ -519,7 +583,7 @@ def main():
                 except ValueError:
                     print("Invalid input!")
         
-        elif choice == "7":
+        elif choice == "8":
             # Delete pantry item
             show_pantry_items(client)
             if client.list_pantry_items():
@@ -536,7 +600,7 @@ def main():
                 except ValueError:
                     print("Invalid item ID!")
         
-        elif choice == "8":
+        elif choice == "9":
             # Check recipe
             show_user_recipes(client)
             if client.list_recipes():
@@ -553,14 +617,19 @@ def main():
                 except ValueError:
                     print("Invalid recipe ID!")
         
-        elif choice == "9":
+        elif choice == "10":
+            # Get grocery recommendations
+            recommendations = client.get_grocery_recommendations()
+            show_grocery_recommendations(recommendations)
+        
+        elif choice == "11":
             # Logout
             print(f"\nLogging out {client.user_email}...")
             print("Goodbye! 👋")
             break
         
         else:
-            print("Invalid choice! Please enter 1-4.")
+            print("Invalid choice! Please enter 1-11.")
 
 
 if __name__ == "__main__":

@@ -111,10 +111,16 @@ def create_recipe(recipe: RecipeCreate, token_data: dict = Depends(verify_token)
 
 
 @router.get("/")
-def list_recipes(token_data: dict = Depends(verify_token)):
+def list_recipes(
+   token_data: dict = Depends(verify_token),
+   ingredient: str = None
+):
    """Return all recipes for the logged-in user.
    
    Requires authentication. Only returns recipes owned by the authenticated user.
+   
+   Optional query parameter:
+   - ingredient: Filter recipes that contain this ingredient (case-insensitive)
    """
 
    if supabase is None:
@@ -124,6 +130,22 @@ def list_recipes(token_data: dict = Depends(verify_token)):
    user_id = get_user_id_from_uid(token_data.get("sub"))
 
    query = supabase.table(Tables.RECIPES).select("*").eq("user_id", user_id)
+   
+   # If ingredient filter is provided, search in ingredients array
+   if ingredient:
+      # Use case-insensitive search - fetch all and filter in Python
+      # (Supabase doesn't support case-insensitive JSON array contains)
+      resp = query.order("created_at", desc=True).execute()
+      recipes = resp.data or []
+      
+      # Filter recipes that contain the ingredient (case-insensitive)
+      ingredient_lower = ingredient.lower()
+      filtered = [
+         r for r in recipes 
+         if any(ingredient_lower in ing.lower() for ing in (r.get("ingredients") or []))
+      ]
+      return filtered
+   
    resp = query.order("created_at", desc=True).execute()
    return resp.data or []
 
