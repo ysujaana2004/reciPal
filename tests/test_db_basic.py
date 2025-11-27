@@ -84,6 +84,25 @@ class RecipeClient:
         self.access_token: Optional[str] = None
         self.user_email: Optional[str] = None
 
+    def signup(self, email: str, password: str, username: str) -> bool:
+        """Sign up a new user."""
+        try:
+            response = requests.post(
+                f"{BASE_URL}/auth/signup",
+                json={"email": email, "password": password, "username": username}
+            )
+            if response.status_code == 200:
+                data = response.json()
+                print(f"\n✓ {data.get('message', 'Signup successful!')}")
+                print(f"Username: {data.get('username', username)}")
+                return True
+            else:
+                print(f"Signup failed: {response.json().get('detail', 'Unknown error')}")
+                return False
+        except Exception as e:
+            print(f"Error connecting to server: {e}")
+            return False
+
     def login(self, email: str, password: str) -> bool:
         """Login and store access token."""
         try:
@@ -200,20 +219,53 @@ def main():
     print("🍳 Recipe Manager - Interactive CLI")
     print("="*60)
     
-    # Login
+    # Login or Signup
     while not client.access_token:
-        print("\nPlease login to continue:")
-        email = input("Email: ").strip()
-        password = input("Password: ").strip()
+        print("\n1. Login")
+        print("2. Sign Up")
+        print("3. Exit")
+        auth_choice = input("\nEnter your choice (1-3): ").strip()
         
-        if client.login(email, password):
-            print(f"\n✓ Logged in as {email}")
-            break
+        if auth_choice == "1":
+            # Login
+            print("\n--- Login ---")
+            email = input("Email: ").strip()
+            password = input("Password: ").strip()
+            
+            if client.login(email, password):
+                print(f"\n✓ Logged in as {email}")
+                break
+            else:
+                retry = input("\nTry again? (y/n): ").strip().lower()
+                if retry != 'y':
+                    continue
+        
+        elif auth_choice == "2":
+            # Sign Up
+            print("\n--- Sign Up ---")
+            email = input("Email: ").strip()
+            username = input("Username: ").strip()
+            password = input("Password: ").strip()
+            confirm_password = input("Confirm Password: ").strip()
+            
+            if password != confirm_password:
+                print("Passwords don't match!")
+                continue
+            
+            if client.signup(email, password, username):
+                # Auto-login after successful signup
+                auto_login = input("\nWould you like to login now? (y/n): ").strip().lower()
+                if auto_login == 'y':
+                    if client.login(email, password):
+                        print(f"\n✓ Logged in as {email}")
+                        break
+        
+        elif auth_choice == "3":
+            print("Goodbye!")
+            return
+        
         else:
-            retry = input("\nTry again? (y/n): ").strip().lower()
-            if retry != 'y':
-                print("Goodbye!")
-                return
+            print("Invalid choice! Please enter 1-3.")
     
     # Main menu loop
     while True:

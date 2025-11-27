@@ -34,7 +34,7 @@ Its job is simply to coordinate these steps and store the results.
 
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
-from .db import supabase
+from .db import supabase, get_user_id_from_uid, ensure_user_owns_resource, Tables
 from .services.downloader import download_audio
 from .services.gemini import extract_recipe
 from .auth import verify_token
@@ -60,17 +60,8 @@ def extract_recipe_from_url(url: str, token_data: dict = Depends(verify_token)):
    if supabase is None:
       raise HTTPException(500, "Supabase client is not configured.")
 
-   # Get the UUID from the JWT token
-   user_uid = token_data.get("sub")
-   if not user_uid:
-      raise HTTPException(401, "Invalid token: missing user ID")
-
-   # Look up the integer user_id from the user table
-   user_resp = supabase.table("user").select("id").eq("uid", user_uid).execute()
-   if not user_resp.data:
-      raise HTTPException(404, "User profile not found. Please contact support.")
-   
-   user_id = user_resp.data[0]["id"]
+   # Get user_id using helper function
+   user_id = get_user_id_from_uid(token_data.get("sub"))
 
    audio_path = download_audio(url)
    data = extract_recipe(audio_path)
@@ -83,7 +74,7 @@ def extract_recipe_from_url(url: str, token_data: dict = Depends(verify_token)):
       "source_url": url,
    }
 
-   resp = supabase.table("recipes").insert(payload).execute()
+   resp = supabase.table(Tables.RECIPES).insert(payload).execute()
    if not resp.data:
       raise HTTPException(500, "Failed to save recipe to Supabase.")
 
@@ -101,17 +92,8 @@ def create_recipe(recipe: RecipeCreate, token_data: dict = Depends(verify_token)
    if supabase is None:
       raise HTTPException(500, "Supabase client is not configured.")
 
-   # Get the UUID from the JWT token
-   user_uid = token_data.get("sub")
-   if not user_uid:
-      raise HTTPException(401, "Invalid token: missing user ID")
-
-   # Look up the integer user_id from the user table
-   user_resp = supabase.table("user").select("id").eq("uid", user_uid).execute()
-   if not user_resp.data:
-      raise HTTPException(404, "User profile not found. Please contact support.")
-   
-   user_id = user_resp.data[0]["id"]
+   # Get user_id using helper function
+   user_id = get_user_id_from_uid(token_data.get("sub"))
 
    payload = {
       "user_id": user_id,
@@ -121,7 +103,7 @@ def create_recipe(recipe: RecipeCreate, token_data: dict = Depends(verify_token)
       "source_url": recipe.source_url,
    }
 
-   resp = supabase.table("recipes").insert(payload).execute()
+   resp = supabase.table(Tables.RECIPES).insert(payload).execute()
    if not resp.data:
       raise HTTPException(500, "Failed to save recipe to Supabase.")
 
@@ -138,19 +120,10 @@ def list_recipes(token_data: dict = Depends(verify_token)):
    if supabase is None:
       raise HTTPException(500, "Supabase client is not configured.")
 
-   # Get the UUID from the JWT token
-   user_uid = token_data.get("sub")
-   if not user_uid:
-      raise HTTPException(401, "Invalid token: missing user ID")
+   # Get user_id using helper function
+   user_id = get_user_id_from_uid(token_data.get("sub"))
 
-   # Look up the integer user_id from the user table
-   user_resp = supabase.table("user").select("id").eq("uid", user_uid).execute()
-   if not user_resp.data:
-      raise HTTPException(404, "User profile not found. Please contact support.")
-   
-   user_id = user_resp.data[0]["id"]
-
-   query = supabase.table("recipes").select("*").eq("user_id", user_id)
+   query = supabase.table(Tables.RECIPES).select("*").eq("user_id", user_id)
    resp = query.order("created_at", desc=True).execute()
    return resp.data or []
 
@@ -165,19 +138,10 @@ def get_recipe(recipe_id: int, token_data: dict = Depends(verify_token)):
    if supabase is None:
       raise HTTPException(500, "Supabase client is not configured.")
 
-   # Get the UUID from the JWT token
-   user_uid = token_data.get("sub")
-   if not user_uid:
-      raise HTTPException(401, "Invalid token: missing user ID")
+   # Get user_id using helper function
+   user_id = get_user_id_from_uid(token_data.get("sub"))
 
-   # Look up the integer user_id from the user table
-   user_resp = supabase.table("user").select("id").eq("uid", user_uid).execute()
-   if not user_resp.data:
-      raise HTTPException(404, "User profile not found. Please contact support.")
-   
-   user_id = user_resp.data[0]["id"]
-
-   query = supabase.table("recipes").select("*").eq("id", recipe_id).eq("user_id", user_id)
+   query = supabase.table(Tables.RECIPES).select("*").eq("id", recipe_id).eq("user_id", user_id)
    resp = query.single().execute()
    if not resp.data:
       raise HTTPException(404, "Recipe not found or you don't have permission to view it.")
@@ -195,19 +159,13 @@ def delete_recipe(recipe_id: int, token_data: dict = Depends(verify_token)):
    if supabase is None:
       raise HTTPException(500, "Supabase client is not configured.")
 
-   # Get the UUID from the JWT token
-   user_uid = token_data.get("sub")
-   if not user_uid:
-      raise HTTPException(401, "Invalid token: missing user ID")
+   # Get user_id using helper function
+   user_id = get_user_id_from_uid(token_data.get("sub"))
 
-   # Look up the integer user_id from the user table
-   user_resp = supabase.table("user").select("id").eq("uid", user_uid).execute()
-   if not user_resp.data:
-      raise HTTPException(404, "User profile not found. Please contact support.")
+   # Verify ownership and delete
+   ensure_user_owns_resource(user_id, Tables.RECIPES, recipe_id)
    
-   user_id = user_resp.data[0]["id"]
-
-   query = supabase.table("recipes").delete().eq("id", recipe_id).eq("user_id", user_id)
+   query = supabase.table(Tables.RECIPES).delete().eq("id", recipe_id).eq("user_id", user_id)
    resp = query.execute()
    if not resp.data:
       raise HTTPException(404, "Recipe not found or you don't have permission to delete it.")
