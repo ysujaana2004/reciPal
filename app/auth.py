@@ -1,133 +1,74 @@
-# app/auth.py
-"""
-===============================================================================
-auth.py — Extremely Simple Authentication (Demo Only)
-===============================================================================
-
-This file provides the simplest possible authentication system suitable
-for a school project or prototype.
-
-It supports:
-    - POST /auth/signup   (create user)
-    - POST /auth/signin   (return a simple token)
-    - get_current_user    (extracts user from token)
-
-IMPORTANT:
-----------
-This is NOT secure.
-Passwords are stored in plain text.
-Tokens are NOT signed.
-This is for DEMO PURPOSES ONLY.
-
-But it will:
-    - Never randomly break
-    - Make it easy to test the whole app
-    - Work perfectly with your existing routes
-===============================================================================
-"""
-
-from fastapi import APIRouter, Depends, HTTPException, Header, Form
-from sqlalchemy.orm import Session
-
-from .db import get_db
-from .models import User
-
-DEMO_EMAIL = "demo@recipal.local"
-DEMO_PASSWORD = "demo"
+from fastapi import APIRouter, HTTPException, Depends
+from fastapi.security import HTTPBearer
+from jose import jwt, JWTError
+from supabase import create_client
+from supabase_auth.errors import AuthApiError
+from pydantic import BaseModel
+import os
 
 router = APIRouter()
 
+security = HTTPBearer()
+supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_ANON_KEY"])
+JWT_SECRET = os.environ["SUPABASE_JWT_SECRET"]
 
-def ensure_demo_user(db: Session) -> User:
-    """
-    Create (if needed) and return a demo user so the app always has
-    someone to act as for unauthenticated requests.
-    """
-    user = db.query(User).filter(User.email == DEMO_EMAIL).first()
-    if user:
-        return user
+class AuthRequest(BaseModel):
+    email: str
+    password: str
 
-    user = User(email=DEMO_EMAIL, password_hash=DEMO_PASSWORD)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-    return user
+class SignupRequest(BaseModel):
+    email: str
+    password: str
+    username: str
 
-
-# ------------------------------------------------------------------------------
-# SIGNUP — store user with plain-text password
-# ------------------------------------------------------------------------------
 @router.post("/signup")
-def signup(
-    email: str = Form(...),
-    password: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    # Check if user exists
-    existing = db.query(User).filter(User.email == email).first()
-    if existing:
-        raise HTTPException(400, "Email already registered.")
-
-    user = User(email=email, password_hash=password)  # plain text
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    return {"message": "user created", "user_id": user.id}
-
-
-# ------------------------------------------------------------------------------
-# SIGNIN — return a SUPER SIMPLE token: "user-<id>"
-# ------------------------------------------------------------------------------
-@router.post("/signin")
-def signin(
-    email: str = Form(...),
-    password: str = Form(...),
-    db: Session = Depends(get_db)
-):
-    user = db.query(User).filter(User.email == email).first()
-
-    # Plain-text password check
-    if not user or user.password_hash != password:
-        raise HTTPException(400, "Invalid credentials.")
-
-    # The token is literally: user-<id>
-    token = f"user-{user.id}"
-    return {"access_token": token, "token_type": "bearer"}
-
-
-# ------------------------------------------------------------------------------
-# get_current_user — decode token "user-<id>"
-# ------------------------------------------------------------------------------
-def get_current_user(
-    authorization: str = Header(None),
-    db: Session = Depends(get_db)
-):
-    """
-    Expected header:
-        Authorization: Bearer user-<id>
-
-    We simply extract the user ID and return the user object.
-    """
-    if not authorization:
-        # Fall back to the demo user so the UI works without manual login
-        return ensure_demo_user(db)
-
+def signup(auth: SignupRequest):
+    """Sign up a new user with email and password."""
     try:
-        scheme, token = authorization.split()
-        if scheme.lower() != "bearer":
-            raise ValueError
-    except ValueError:
-        raise HTTPException(401, "Invalid Authorization header format.")
+        # Create auth user in Supabase
+        auth_response = supabase.auth.sign_up({"email": auth.email, "password": auth.password})
+        
+        # Get the user ID from auth response
+        user_id = auth_response.user.id
+        
+        # Create profile entry in your custom user table
+        supabase.table("user").insert({
+            "uid": user_id,
+            "username": auth.username
+        }).execute()
+        
+        return {
+            "message": "User signed up successfully. Please check your email to confirm.",
+            "user_id": user_id,
+            "username": auth.username
+        }
+    except AuthApiError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create user profile: {str(e)}")
 
-    if not token.startswith("user-"):
-        raise HTTPException(401, "Invalid token format.")
+@router.post("/login")
+def login(auth: AuthRequest):
+    """Log in a user and return a JWT token."""
+    try:
+        auth_response = supabase.auth.sign_in_with_password({"email": auth.email, "password": auth.password})
+        if not auth_response.session:
+            raise HTTPException(status_code=400, detail="Login failed.")
+        return {"access_token": auth_response.session.access_token, "token_type": "bearer"}
+    except AuthApiError as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    # Extract ID from token
-    user_id = token.split("user-")[-1]
-
-    user = db.query(User).filter(User.id == user_id).first()
-    if not user:
-        raise HTTPException(401, "User not found.")
-
-    return user
+def verify_token(credentials=Depends(HTTPBearer())):
+    token = credentials.credentials
+    try:
+        # Decode JWT without verification first to check structure
+        # Supabase uses the JWT secret for signing 
+        decoded = jwt.decode(
+            token, 
+            JWT_SECRET, 
+            algorithms=["HS256"],
+            options={"verify_aud": False}  # Supabase JWTs don't always have standard aud
+        )
+        return decoded
+    except JWTError as e:
+        raise HTTPException(401, f"Invalid token: {str(e)}")

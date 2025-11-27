@@ -33,14 +33,15 @@ all the parts of the system together in one place.
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from dotenv import load_dotenv
 
-from .db import engine, SessionLocal
-from .startup_data import initialize_demo_data
-from .models import Base
-from . import auth, recipes, grocery, pantry
+# Load environment variables from .env file
+load_dotenv()
+
+from . import auth, recipes
 
 # Automatically create tables if they don't exist
-Base.metadata.create_all(bind=engine)
+# Base.metadata.create_all(bind=engine)
 
 # Create the FastAPI application instance.
 app = FastAPI(
@@ -50,8 +51,8 @@ app = FastAPI(
 )
 
 # Populate demo data IF database is empty
-with SessionLocal() as db:
-    initialize_demo_data(db)
+# with SessionLocal() as db:
+#     initialize_demo_data(db)
 
 # Allow frontend apps to talk to the backend.
 app.add_middleware(
@@ -65,8 +66,6 @@ app.add_middleware(
 # Register (include) all route files.
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(recipes.router, prefix="/recipes", tags=["recipes"])
-app.include_router(grocery.router, prefix="/grocery", tags=["grocery"])
-app.include_router(pantry.router, prefix="/pantry", tags=["pantry"])
 
 
 @app.get("/health")
