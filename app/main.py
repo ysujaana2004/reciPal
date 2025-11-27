@@ -38,7 +38,7 @@ from dotenv import load_dotenv
 # Load environment variables from .env file
 load_dotenv()
 
-from . import auth, recipes
+from . import auth, recipes, pantry
 
 # Automatically create tables if they don't exist
 # Base.metadata.create_all(bind=engine)
@@ -66,6 +66,7 @@ app.add_middleware(
 # Register (include) all route files.
 app.include_router(auth.router, prefix="/auth", tags=["auth"])
 app.include_router(recipes.router, prefix="/recipes", tags=["recipes"])
+app.include_router(pantry.router, prefix="/pantry", tags=["pantry"])
 
 
 @app.get("/health")

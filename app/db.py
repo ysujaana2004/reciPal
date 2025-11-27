@@ -21,9 +21,6 @@ class Tables:
     USER = "user"
     RECIPES = "recipes"
     PANTRY = "pantry_items"
-    INGREDIENTS = "ingredients"
-    GROCERY = "grocery_recommendations"
-
 
 # ==================== Helper Functions ====================
 

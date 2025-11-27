@@ -180,6 +180,119 @@ class RecipeClient:
             print(f"Error: {e}")
             return False
 
+    # ==================== Pantry Methods ====================
+
+    def add_pantry_item(self, ingredient_name: str, quantity: float, unit: str = "pieces") -> bool:
+        """Add or update a pantry item."""
+        try:
+            response = requests.post(
+                f"{BASE_URL}/pantry/",
+                json={"ingredient_name": ingredient_name, "quantity": quantity, "unit": unit},
+                headers=self.get_headers()
+            )
+            if response.status_code == 200:
+                item = response.json()
+                print(f"\n✓ Pantry item added/updated: {item.get('ingredient_name')} ({item.get('quantity')} {item.get('unit')})")
+                return True
+            else:
+                print(f"Failed to add pantry item (Status {response.status_code}):")
+                try:
+                    print(f"  {response.json().get('detail', 'Unknown error')}")
+                except:
+                    print(f"  Response: {response.text[:200]}")
+                return False
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
+    def list_pantry_items(self) -> list:
+        """Get all pantry items."""
+        try:
+            response = requests.get(
+                f"{BASE_URL}/pantry/",
+                headers=self.get_headers()
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Failed to fetch pantry items (Status {response.status_code}):")
+                try:
+                    print(f"  {response.json().get('detail', 'Unknown error')}")
+                except:
+                    print(f"  Response: {response.text[:200]}")
+                return []
+        except Exception as e:
+            print(f"Error: {e}")
+            return []
+
+    def update_pantry_item(self, item_id: int, quantity: float, unit: str = None) -> bool:
+        """Update quantity of a pantry item."""
+        try:
+            payload = {"quantity": quantity}
+            if unit:
+                payload["unit"] = unit
+            
+            response = requests.put(
+                f"{BASE_URL}/pantry/{item_id}",
+                json=payload,
+                headers=self.get_headers()
+            )
+            if response.status_code == 200:
+                item = response.json()
+                print(f"\n✓ Pantry item updated: {item.get('ingredient_name')} ({item.get('quantity')} {item.get('unit')})")
+                return True
+            else:
+                print(f"Failed to update pantry item (Status {response.status_code}):")
+                try:
+                    print(f"  {response.json().get('detail', 'Unknown error')}")
+                except:
+                    print(f"  Response: {response.text[:200]}")
+                return False
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
+    def delete_pantry_item(self, item_id: int) -> bool:
+        """Delete a pantry item."""
+        try:
+            response = requests.delete(
+                f"{BASE_URL}/pantry/{item_id}",
+                headers=self.get_headers()
+            )
+            if response.status_code == 200:
+                print(f"\n✓ Pantry item deleted successfully!")
+                return True
+            else:
+                print(f"Failed to delete pantry item (Status {response.status_code}):")
+                try:
+                    print(f"  {response.json().get('detail', 'Unknown error')}")
+                except:
+                    print(f"  Response: {response.text[:200]}")
+                return False
+        except Exception as e:
+            print(f"Error: {e}")
+            return False
+
+    def check_recipe_ingredients(self, recipe_id: int) -> dict:
+        """Check if user can make a recipe based on pantry."""
+        try:
+            response = requests.get(
+                f"{BASE_URL}/pantry/check/recipe/{recipe_id}",
+                headers=self.get_headers()
+            )
+            if response.status_code == 200:
+                return response.json()
+            else:
+                print(f"Failed to check recipe (Status {response.status_code}):")
+                try:
+                    print(f"  {response.json().get('detail', 'Unknown error')}")
+                except:
+                    print(f"  Response: {response.text[:200]}")
+                return None
+        except Exception as e:
+            print(f"Error: {e}")
+            return None
+
 
 def show_dummy_recipes():
     """Display available dummy recipes."""
@@ -208,6 +321,54 @@ def show_user_recipes(client: RecipeClient):
         print(f"           Source: {recipe.get('source_url', 'N/A')}")
         print("-" * 60)
     print(f"Total: {len(recipes)} recipe(s)")
+    print("="*60)
+
+
+def show_pantry_items(client: RecipeClient):
+    """Display all pantry items."""
+    items = client.list_pantry_items()
+    
+    if not items:
+        print("\n📭 Your pantry is empty.")
+        return
+    
+    print("\n" + "="*60)
+    print("Your Pantry:")
+    print("="*60)
+    for item in items:
+        print(f"ID: {item['id']:4d} | {item['ingredient_name']:20s} | {item['quantity']:6.1f} {item['unit']}")
+    print("="*60)
+    print(f"Total: {len(items)} item(s)")
+
+
+def show_recipe_check_result(result: dict):
+    """Display recipe ingredient check results."""
+    if not result:
+        return
+    
+    print("\n" + "="*60)
+    print(f"Recipe: {result['recipe_title']}")
+    print("="*60)
+    
+    if result['can_make']:
+        print("✓ YOU CAN MAKE THIS RECIPE!")
+    else:
+        print(f"✗ Missing {result['need_count']}/{result['total_ingredients']} ingredients")
+    
+    print("\n--- AVAILABLE ({}) ---".format(result['have_count']))
+    if result['available']:
+        for item in result['available']:
+            print(f"  ✓ {item['ingredient_name']:20s} ({item['quantity']} {item['unit']})")
+    else:
+        print("  (none)")
+    
+    print("\n--- MISSING ({}) ---".format(result['need_count']))
+    if result['missing']:
+        for ingredient in result['missing']:
+            print(f"  ✗ {ingredient}")
+    else:
+        print("  (none)")
+    
     print("="*60)
 
 
@@ -272,13 +433,21 @@ def main():
         print("\n" + "="*60)
         print("Main Menu:")
         print("="*60)
-        print("1. Add a dummy recipe")
-        print("2. View all my recipes")
-        print("3. Delete a recipe")
-        print("4. Logout")
+        print("RECIPES:")
+        print("  1. Add a dummy recipe")
+        print("  2. View all my recipes")
+        print("  3. Delete a recipe")
+        print("\nPANTRY:")
+        print("  4. Add pantry item")
+        print("  5. View my pantry")
+        print("  6. Update pantry item")
+        print("  7. Delete pantry item")
+        print("\nCHECK:")
+        print("  8. Check if I can make a recipe")
+        print("\n  9. Logout")
         print("="*60)
         
-        choice = input("\nEnter your choice (1-4): ").strip()
+        choice = input("\nEnter your choice (1-9): ").strip()
         
         if choice == "1":
             # Add dummy recipe
@@ -319,6 +488,72 @@ def main():
                     print("Invalid recipe ID!")
         
         elif choice == "4":
+            # Add pantry item
+            print("\n--- Add Pantry Item ---")
+            ingredient = input("Ingredient name: ").strip()
+            try:
+                quantity = float(input("Quantity: ").strip())
+                unit = input("Unit (pieces/kg/cups/etc): ").strip() or "pieces"
+                client.add_pantry_item(ingredient, quantity, unit)
+            except ValueError:
+                print("Invalid quantity!")
+        
+        elif choice == "5":
+            # View pantry
+            show_pantry_items(client)
+        
+        elif choice == "6":
+            # Update pantry item
+            show_pantry_items(client)
+            if client.list_pantry_items():
+                item_id = input("\nEnter item ID to update or 'c' to cancel: ").strip()
+                
+                if item_id.lower() == 'c':
+                    continue
+                
+                try:
+                    item_id = int(item_id)
+                    quantity = float(input("New quantity: ").strip())
+                    unit = input("New unit (leave empty to keep current): ").strip() or None
+                    client.update_pantry_item(item_id, quantity, unit)
+                except ValueError:
+                    print("Invalid input!")
+        
+        elif choice == "7":
+            # Delete pantry item
+            show_pantry_items(client)
+            if client.list_pantry_items():
+                item_id = input("\nEnter item ID to delete or 'c' to cancel: ").strip()
+                
+                if item_id.lower() == 'c':
+                    continue
+                
+                try:
+                    item_id = int(item_id)
+                    confirm = input(f"Are you sure you want to delete item {item_id}? (y/n): ").strip().lower()
+                    if confirm == 'y':
+                        client.delete_pantry_item(item_id)
+                except ValueError:
+                    print("Invalid item ID!")
+        
+        elif choice == "8":
+            # Check recipe
+            show_user_recipes(client)
+            if client.list_recipes():
+                recipe_id = input("\nEnter recipe ID to check or 'c' to cancel: ").strip()
+                
+                if recipe_id.lower() == 'c':
+                    continue
+                
+                try:
+                    recipe_id = int(recipe_id)
+                    result = client.check_recipe_ingredients(recipe_id)
+                    if result:
+                        show_recipe_check_result(result)
+                except ValueError:
+                    print("Invalid recipe ID!")
+        
+        elif choice == "9":
             # Logout
             print(f"\nLogging out {client.user_email}...")
             print("Goodbye! 👋")
