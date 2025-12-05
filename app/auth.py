@@ -9,7 +9,15 @@ import os
 router = APIRouter()
 
 security = HTTPBearer()
-supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_ANON_KEY"])
+supabase = create_client(os.environ["SUPABASE_URL"], os.environ["SUPABASE_ANON_KEY"]) 
+# Optional service-role client: useful for server-side operations that need to bypass
+# row-level security (RLS). Set `SUPABASE_SERVICE_ROLE_KEY` in your server `.env`
+# only — never expose the service role key to client-side code.
+service_role_key = os.environ.get("SUPABASE_SERVICE_ROLE_KEY")
+service_supabase = None
+if service_role_key:
+    service_supabase = create_client(os.environ["SUPABASE_URL"], service_role_key)
+
 JWT_SECRET = os.environ["SUPABASE_JWT_SECRET"]
 
 class AuthRequest(BaseModel):
@@ -27,12 +35,14 @@ def signup(auth: SignupRequest):
     try:
         # Create auth user in Supabase
         auth_response = supabase.auth.sign_up({"email": auth.email, "password": auth.password})
-        
+
         # Get the user ID from auth response
         user_id = auth_response.user.id
-        
-        # Create profile entry in your custom user table
-        supabase.table("user").insert({
+
+        # Use service role client if available (bypasses RLS). Otherwise attempt
+        # the insert with the anon client (may fail if RLS blocks anonymous writes).
+        insert_client = service_supabase if service_supabase is not None else supabase
+        insert_client.table("user").insert({
             "uid": user_id,
             "username": auth.username
         }).execute()
