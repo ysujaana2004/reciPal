@@ -10,8 +10,16 @@ export default function Signup() {
 
   const handleSubmit = async(e) => {
     e.preventDefault();
-    await signup(form.username, form.email, form.password);
-    console.log("Signing up:", form);
+    try {
+      await signup({
+        username: form.username,
+        email: form.email,
+        password: form.password,
+      });
+      console.log("Signing up:", form);
+    } catch (err) {
+      console.error("Signup failed:", err);
+    }
   };
 
   return (

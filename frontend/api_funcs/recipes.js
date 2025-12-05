@@ -1,24 +1,33 @@
-// FastAPI mounts the recipes router at /recipes (see app/main.py)
-// const BASE = "http://127.0.0.1:8000/recipes";
+import { getAccessToken } from "./auth";
 
-const API_BASE = import.meta.env.VITE_API_URL; // e.g. https://your-backend.onrender.com
+// FastAPI mounts the recipes router at /recipes (see app/main.py)
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
 const BASE = `${API_BASE.replace(/\/$/, "")}/recipes`;
+
+// const API_BASE = import.meta.env.VITE_API_URL; // e.g. https://your-backend.onrender.com
+// const BASE = `${API_BASE.replace(/\/$/, "")}/recipes`;
 
 async function request(
   path,
   { method = "GET", headers = {}, body, signal } = {}
 ) {
   const url = `${BASE}${path}`;
+  const authHeaders = { ...headers };
+
+  const token = getAccessToken();
+  if (token) {
+    authHeaders.Authorization = `Bearer ${token}`;
+  }
 
   // If body is a plain object, send JSON
   const isFormData =
     typeof FormData !== "undefined" && body instanceof FormData;
-  if (body && !isFormData && !headers["Content-Type"]) {
-    headers["Content-Type"] = "application/json";
+  if (body && !isFormData && !authHeaders["Content-Type"]) {
+    authHeaders["Content-Type"] = "application/json";
     body = JSON.stringify(body);
   }
 
-  const res = await fetch(url, { method, headers, body, signal });
+  const res = await fetch(url, { method, headers: authHeaders, body, signal });
   const text = await res.text();
 
   let data = null;

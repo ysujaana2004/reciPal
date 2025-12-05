@@ -1,48 +1,69 @@
-// const BASE = "http://127.0.0.1:8000";
-const BASE = import.meta.env.VITE_API_URL;
+const API_BASE = import.meta.env.VITE_API_URL || "http://127.0.0.1:8000";
+const BASE = `${API_BASE.replace(/\/$/, "")}/auth`;
+const ACCESS_KEY = "access_token";
+
+function getJsonOrThrow(res, fallback = "Request failed") {
+  return res.json().then((data) => {
+    if (!res.ok) {
+      const detail = data?.detail || data?.error || res.statusText;
+      throw new Error(detail || fallback);
+    }
+    return data;
+  });
+}
+
+export function getAccessToken() {
+  return localStorage.getItem(ACCESS_KEY);
+}
+
+export function clearAccessToken() {
+  localStorage.removeItem(ACCESS_KEY);
+}
+
+export function getSessionUser() {
+  const token = getAccessToken();
+  if (!token) return null;
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1] || ""));
+    return {
+      email: payload.email || payload.user_metadata?.email,
+      uid: payload.sub,
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function me() {
+  const user = getSessionUser();
+  if (!user) {
+    throw new Error("Unauthorized");
+  }
+  return user;
+}
 
 export async function signup({ username, email, password }) {
-  const res = await fetch(`${BASE}/api/auth/signup/`, {
+  const res = await fetch(`${BASE}/signup`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ username, email, password }),
   });
-  if (!res.ok) throw new Error("Signup failed");
-  return res.json();
+  return getJsonOrThrow(res, "Signup failed");
 }
 
-export async function signin({ login, password }) {
-  const res = await fetch(`${BASE}/api/auth/signin/`, {
+export async function login({ email, password }) {
+  const res = await fetch(`${BASE}/login`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ login, password }),
+    body: JSON.stringify({ email, password }),
   });
-  if (!res.ok) throw new Error("Signin failed");
-  const data = await res.json();
-  // store tokens (you can use httpOnly cookies in prod; localStorage is simple for dev)
-  localStorage.setItem("access", data.access);
-  localStorage.setItem("refresh", data.refresh);
-  return data.user; // { username, email }
+  const data = await getJsonOrThrow(res, "Login failed");
+  if (data?.access_token) {
+    localStorage.setItem(ACCESS_KEY, data.access_token);
+  }
+  return data;
 }
 
-export async function me() {
-  const access = localStorage.getItem("access");
-  const res = await fetch(`${BASE}/api/auth/me/`, {
-    headers: { Authorization: `Bearer ${access}` },
-  });
-  if (res.status === 401) throw new Error("Unauthorized");
-  return res.json(); // { username, email }
-}
-
-export async function refreshToken() {
-  const refresh = localStorage.getItem("refresh");
-  const res = await fetch(`${BASE}/api/auth/refresh/`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh }),
-  });
-  if (!res.ok) throw new Error("Refresh failed");
-  const data = await res.json();
-  localStorage.setItem("access", data.access);
-  return data.access;
+export function logout() {
+  clearAccessToken();
 }

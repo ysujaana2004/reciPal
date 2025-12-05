@@ -1,52 +1,198 @@
-import React from "react";
+import React, { useState } from "react";
 import styled from "styled-components";
 import bread from "../assets/bread.png";
 import Footer from "../Footer/Footer";
+import { login, signup } from "../../api_funcs/auth.js";
 
 const Form = () => {
+  const [loginForm, setLoginForm] = useState({ email: "", password: "" });
+  const [signupForm, setSignupForm] = useState({
+    email: "",
+    username: "",
+    password: "",
+    confirmPassword: "",
+  });
+  const [status, setStatus] = useState({ type: null, message: "" });
+  const [loading, setLoading] = useState(false);
+
+  const handleLoginSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setStatus({ type: null, message: "" });
+    try {
+      await login(loginForm);
+      setStatus({
+        type: "success",
+        message: "Logged in! Token stored for API calls.",
+      });
+    } catch (err) {
+      setStatus({ type: "error", message: err.message || "Login failed" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSignupSubmit = async (e) => {
+    e.preventDefault();
+    if (signupForm.password !== signupForm.confirmPassword) {
+      setStatus({ type: "error", message: "Passwords do not match" });
+      return;
+    }
+
+    setLoading(true);
+    setStatus({ type: null, message: "" });
+    try {
+      await signup({
+        email: signupForm.email,
+        username: signupForm.username,
+        password: signupForm.password,
+      });
+      setStatus({
+        type: "success",
+        message: "Account created. Please check your email to confirm.",
+      });
+    } catch (err) {
+      setStatus({ type: "error", message: err.message || "Signup failed" });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <StyledWrapper>
-      <div className="container">
-        <input type="checkbox" id="signup_toggle" />
-        <form className="form">
-          <div className="form_front">
+    <>
+      <StyledWrapper>
+        <div className="container">
+          <input type="checkbox" id="signup_toggle" />
+          <div className="form">
+            <form className="form_front" onSubmit={handleLoginSubmit}>
             <img src={bread} alt="Bread Icon" className="login-image" />
             <div className="form_details">Login</div>
-            <input placeholder="Username" className="input" type="text" />
-            <input placeholder="Password" className="input" type="password" />
-            <button className="btn">Login</button>
+            <input
+              placeholder="Email"
+              className="input"
+              type="email"
+              name="email"
+              value={loginForm.email}
+              onChange={(e) =>
+                setLoginForm({ ...loginForm, [e.target.name]: e.target.value })
+              }
+              required
+            />
+            <input
+              placeholder="Password"
+              className="input"
+              type="password"
+              name="password"
+              value={loginForm.password}
+              onChange={(e) =>
+                setLoginForm({ ...loginForm, [e.target.name]: e.target.value })
+              }
+              required
+            />
+            <button className="btn" type="submit" disabled={loading}>
+              {loading ? "Logging in..." : "Login"}
+            </button>
+            {status.message && (
+              <p
+                className={`status ${
+                  status.type === "error" ? "status--error" : "status--success"
+                }`}
+              >
+                {status.message}
+              </p>
+            )}
             <span className="switch">
               Don't have an account?{" "}
               <label className="signup_tog" htmlFor="signup_toggle">
                 Sign Up
               </label>
             </span>
-          </div>
+            </form>
 
-          <div className="form_back">
+            <form className="form_back" onSubmit={handleSignupSubmit}>
             <img src={bread} alt="Bread Icon" className="login-image" />
             <div className="form_details">Sign Up</div>
-            <input placeholder="Firstname" className="input" type="text" />
-            <input placeholder="Username" className="input" type="text" />
-            <input placeholder="Password" className="input" type="password" />
+            <input
+              placeholder="Email"
+              className="input"
+              type="email"
+              name="email"
+              value={signupForm.email}
+              onChange={(e) =>
+                setSignupForm({
+                  ...signupForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              required
+            />
+            <input
+              placeholder="Username"
+              className="input"
+              type="text"
+              name="username"
+              value={signupForm.username}
+              onChange={(e) =>
+                setSignupForm({
+                  ...signupForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              required
+            />
+            <input
+              placeholder="Password"
+              className="input"
+              type="password"
+              name="password"
+              value={signupForm.password}
+              onChange={(e) =>
+                setSignupForm({
+                  ...signupForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              required
+            />
             <input
               placeholder="Confirm Password"
               className="input"
               type="password"
+              name="confirmPassword"
+              value={signupForm.confirmPassword}
+              onChange={(e) =>
+                setSignupForm({
+                  ...signupForm,
+                  [e.target.name]: e.target.value,
+                })
+              }
+              required
             />
-            <button className="btn">Sign Up</button>
+            <button className="btn" type="submit" disabled={loading}>
+              {loading ? "Signing up..." : "Sign Up"}
+            </button>
+            {status.message && (
+              <p
+                className={`status ${
+                  status.type === "error" ? "status--error" : "status--success"
+                }`}
+              >
+                {status.message}
+              </p>
+            )}
             <span className="switch">
               Already have an account?{" "}
               <label className="signup_tog" htmlFor="signup_toggle">
                 Sign In
               </label>
             </span>
+            </form>
           </div>
-        </form>
-      </div>
-    </StyledWrapper>
+        </div>
+      </StyledWrapper>
+      <Footer />
+    </>
   );
-    <Footer />
 };
 
 const StyledWrapper = styled.div`
@@ -186,6 +332,21 @@ const StyledWrapper = styled.div`
      margin-top: 10px;
      margin-bottom: 25px;
     }
+
+  .status {
+    font-size: 13px;
+    text-align: center;
+    margin: 0;
+    min-height: 18px;
+  }
+
+  .status--error {
+    color: #ffb3b3;
+  }
+
+  .status--success {
+    color: #c9e7c1;
+  }
 `;
 
 export default Form;

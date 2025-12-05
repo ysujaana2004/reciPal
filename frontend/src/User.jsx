@@ -1,12 +1,52 @@
 import { Link } from "react-router-dom";
-import {me} from "../api_funcs/auth.js";
-import { useEffect } from "react";
+import { logout, me } from "../api_funcs/auth.js";
+import { useEffect, useState } from "react";
 
 export default function User() {
-  let user = null
-  useEffect(async() => {
-    user = await me();
-  }, [])
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const profile = await me();
+        setUser(profile);
+      } catch (err) {
+        setError(err.message || "Not signed in");
+      } finally {
+        setLoading(false);
+      }
+    })();
+  }, []);
+
+  const handleLogout = () => {
+    logout();
+    setUser(null);
+  };
+
+  if (loading) {
+    return (
+      <main className="page container" style={{ maxWidth: 720 }}>
+        <p>Loading your account...</p>
+      </main>
+    );
+  }
+
+  if (error || !user) {
+    return (
+      <main className="page container" style={{ maxWidth: 720 }}>
+        <h1 className="page__title">Dashboard</h1>
+        <p className="page__subtitle" style={{ color: "var(--muted)" }}>
+          {error || "You are not signed in."}
+        </p>
+        <Link to="/login" style={{ color: "var(--accent)", fontWeight: 600 }}>
+          Log in
+        </Link>
+      </main>
+    );
+  }
+
   const savedRecipes = [
     { id: "creamy-mushroom-risotto", title: "Creamy Mushroom Risotto" },
     { id: "lemon-pepper-chicken", title: "Lemon Pepper Chicken" },
@@ -16,7 +56,9 @@ export default function User() {
   return (
     <main className="page container" style={{ maxWidth: 720 }}>
       <h1 className="page__title">Dashboard</h1>
-      <p className="page__subtitle">Welcome back, {user.username} 👋</p>
+      <p className="page__subtitle">
+        Welcome back, {user.username || user.email || "friend"} 👋
+      </p>
 
       {/* Stats */}
       <section className="card" style={{ marginBottom: 24 }}>
@@ -85,9 +127,18 @@ export default function User() {
           <h2 style={{ margin: 0, fontSize: "18px", fontWeight: "700" }}>
             Account
           </h2>
-          <Link to="/login" style={{ color: "var(--accent)", fontWeight: 600 }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              background: "none",
+              border: "none",
+              color: "var(--accent)",
+              fontWeight: 600,
+              cursor: "pointer",
+            }}
+          >
             Log out
-          </Link>
+          </button>
         </div>
         <p style={{ margin: 0, color: "var(--muted)" }}>
           Signed in as <b>{user.email}</b>
