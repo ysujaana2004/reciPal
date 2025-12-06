@@ -1,17 +1,38 @@
 import { useEffect, useRef, useState } from "react";
 import "./Pantry.css";
 import Footer from "../Footer/Footer";
+import { getPantryItems, addPantryItem, deletePantryItem } from "../../api_funcs/pantry";
 
 export default function Pantry() {
   const [items, setItems] = useState([]);
   const [query, setQuery] = useState("");
   const [scanning, setScanning] = useState(false);
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(true);
   const videoRef = useRef(null);
   const streamRef = useRef(null);
   const rafRef = useRef(0);
   const detectorRef = useRef(null);
   const [manualCode, setManualCode] = useState("");
+
+  // Fetch pantry items on component mount
+  useEffect(() => {
+    fetchPantryItems();
+  }, []);
+
+  const fetchPantryItems = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const data = await getPantryItems();
+      setItems(data || []);
+    } catch (err) {
+      console.error("Failed to fetch pantry items:", err);
+      setError(err.message || "Failed to load pantry items");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Start camera scanning
   const startScan = async () => {
@@ -88,8 +109,21 @@ export default function Pantry() {
   // Handle detected barcode
   const handleDetectedBarcode = async (barcode) => {
     const product = await mockLookup(barcode);
-    const id = `${barcode}-${Date.now()}`;
-    setItems((prev) => [{ id, barcode, ...product }, ...prev]);
+    
+    try {
+      // Save to backend
+      const savedItem = await addPantryItem({
+        ingredient_name: product.title,
+        quantity: 1,
+        unit: "pieces"
+      });
+      
+      // Add to local state
+      setItems((prev) => [savedItem, ...prev]);
+    } catch (err) {
+      console.error("Failed to add item:", err);
+      setError(err.message || "Failed to add item to pantry");
+    }
   };
 
   // Mock product lookup
@@ -105,11 +139,18 @@ export default function Pantry() {
     };
   }
 
-  const removeItem = (id) =>
-    setItems((prev) => prev.filter((it) => it.id !== id));
+  const removeItem = async (id) => {
+    try {
+      await deletePantryItem(id);
+      setItems((prev) => prev.filter((it) => it.id !== id));
+    } catch (err) {
+      console.error("Failed to delete item:", err);
+      setError(err.message || "Failed to delete item");
+    }
+  };
 
   const filtered = items.filter((it) =>
-    (it.title + " " + (it.brand || "") + " " + (it.barcode || ""))
+    (it.ingredient_name || "")
       .toLowerCase()
       .includes(query.toLowerCase())
   );
@@ -195,7 +236,11 @@ export default function Pantry() {
 
         {/* Pantry Items */}
         <section className="pantry-grid">
-          {filtered.length === 0 ? (
+          {loading ? (
+            <div className="card empty-state">
+              <p>Loading pantry items...</p>
+            </div>
+          ) : filtered.length === 0 ? (
             <div className="card empty-state">
               {items.length === 0 ? (
                 <p>
@@ -210,9 +255,9 @@ export default function Pantry() {
               <article key={it.id} className="card pantry-item">
                 <div className="pantry-item__content">
                   <div className="pantry-item__info">
-                    <h3>{it.title}</h3>
+                    <h3>{it.ingredient_name}</h3>
                     <p>
-                      {it.brand || "—"} • <span>Barcode: {it.barcode}</span>
+                      Quantity: {it.quantity} {it.unit}
                     </p>
                   </div>
                   <button

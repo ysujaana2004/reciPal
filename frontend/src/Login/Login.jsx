@@ -1,10 +1,12 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import bread from "../assets/bread.png";
 import Footer from "../Footer/Footer";
 import { login, signup } from "../../api_funcs/auth.js";
 
 const Form = () => {
+  const navigate = useNavigate();
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [signupForm, setSignupForm] = useState({
     email: "",
@@ -25,6 +27,10 @@ const Form = () => {
         type: "success",
         message: "Logged in! Token stored for API calls.",
       });
+      // Navigate to home page after successful login
+      setTimeout(() => {
+        navigate("/");
+      }, 500);
     } catch (err) {
       setStatus({ type: "error", message: err.message || "Login failed" });
     } finally {

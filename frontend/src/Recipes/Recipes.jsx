@@ -40,7 +40,7 @@ export default function Recipes() {
           </p>
         </div>
           <div className="navbar__actions">
-            <Link to="/login">
+            <Link to="/recipes/new">
               <Addreci />
             </Link>
             </div>
