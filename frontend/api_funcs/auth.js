@@ -13,11 +13,11 @@ function getJsonOrThrow(res, fallback = "Request failed") {
 }
 
 export function getAccessToken() {
-  return localStorage.getItem(ACCESS_KEY);
+  return sessionStorage.getItem(ACCESS_KEY);
 }
 
 export function clearAccessToken() {
-  localStorage.removeItem(ACCESS_KEY);
+  sessionStorage.removeItem(ACCESS_KEY);
 }
 
 export function getSessionUser() {
@@ -59,7 +59,7 @@ export async function login({ email, password }) {
   });
   const data = await getJsonOrThrow(res, "Login failed");
   if (data?.access_token) {
-    localStorage.setItem(ACCESS_KEY, data.access_token);
+    sessionStorage.setItem(ACCESS_KEY, data.access_token);
   }
   return data;
 }

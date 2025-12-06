@@ -45,8 +45,8 @@ async function request(
 /**
  * Get all pantry items for the authenticated user
  */
-export async function getPantryItems() {
-  return request("/", { method: "GET" });
+export async function getPantryItems(opts = {}) {
+  return request("/", { method: "GET", ...opts });
 }
 
 /**

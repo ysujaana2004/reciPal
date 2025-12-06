@@ -40,9 +40,11 @@ export default function Recipes() {
           </p>
         </div>
           <div className="navbar__actions">
-            <Link to="/recipes/new">
-              <Addreci />
-            </Link>
+              <Addreci onRecipeCreated={(recipe) =>
+                setRecipes((prev) =>
+                  recipe ? [recipe, ...prev.filter((r) => r.id !== recipe.id)] : prev
+                )
+              } />
             </div>
              <div className="searchbar">
                 <input

@@ -48,7 +48,7 @@ requirements.txt
 ### `app/recipes.py`
 - This is the heart of the product: it’s where reels get turned into structured recipes and where the frontend fetches them.
 - Key endpoints:
-  - `POST /recipes/extract?url=<video>` → takes a TikTok/YouTube/Instagram link, downloads the audio (`services/downloader.py`), calls Gemini to extract the recipe (`services/gemini.py`), saves it, and returns the new recipe.
+  - `POST /recipes/from_video` → accepts JSON `{ "video_url": "..." }`, downloads the audio (`services/downloader.py`), calls Gemini to extract the recipe (`services/gemini.py`), saves it, and returns both the stored record plus Gemini's raw output. (`/recipes/extract?url=` still works for legacy callers.)
   - `GET /recipes/` → returns every recipe for the logged-in user. The Recipes page calls this on load.
   - `GET /recipes/{id}` → returns a single recipe (useful for a detail page).
   - `DELETE /recipes/{id}` → removes a recipe (handy for future “delete” buttons).
@@ -109,8 +109,8 @@ Below is the typical journey from opening the site to generating grocery suggest
 
 3. **Adding a new recipe**
    - On the “Add Recipe” page the user pastes a reel URL and hits submit.
-   - Frontend calls `createRecipeFromReel(url)` → `POST http://127.0.0.1:8000/recipes/extract?url=<...>`.
-   - `app/recipes.py:extract_recipe_from_url` takes over:
+   - Frontend calls `createRecipeFromReel(url)` → `POST http://127.0.0.1:8000/recipes/from_video` with body `{ video_url: url }`.
+   - `app/recipes.py:create_recipe_from_video` takes over:
      1. `services/downloader.py` pulls the video audio.
      2. `services/gemini.py` turns the audio into structured recipe data.
      3. The recipe and its ingredients are saved via `models.py` + `db.py`.

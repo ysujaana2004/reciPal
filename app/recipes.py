@@ -32,8 +32,12 @@ Its job is simply to coordinate these steps and store the results.
 ===============================================================================
 """
 
+import shutil
+from pathlib import Path
+
 from fastapi import APIRouter, HTTPException, Depends
 from pydantic import BaseModel
+
 from .db import supabase, get_user_id_from_uid, ensure_user_owns_resource, Tables
 from .services.downloader import download_audio
 from .services.gemini import extract_recipe
@@ -43,10 +47,41 @@ router = APIRouter()
 
 
 class RecipeCreate(BaseModel):
+   # Simple schema used when someone manually submits recipe text
    title: str
    instructions: str
    ingredients: list[str]
    source_url: str = ""
+
+
+class RecipeExtractRequest(BaseModel):
+   # JSON payload we accept for the Gemini pipeline
+   video_url: str
+
+
+def _insert_recipe_record(
+   user_id: int,
+   *,
+   title: str,
+   instructions: str,
+   ingredients: list[str],
+   source_url: str = "",
+):
+   """Helper used by every endpoint to save a recipe."""
+
+   payload = {
+      "user_id": user_id,
+      "title": title,
+      "instructions": instructions,
+      "ingredients": ingredients,
+      "source_url": source_url,
+   }
+
+   resp = supabase.table(Tables.RECIPES).insert(payload).execute()
+   if not resp.data:
+      raise HTTPException(500, "Failed to save recipe to Supabase.")
+
+   return resp.data[0]
 
 
 
@@ -63,22 +98,24 @@ def extract_recipe_from_url(url: str, token_data: dict = Depends(verify_token)):
    # Get user_id using helper function
    user_id = get_user_id_from_uid(token_data.get("sub"))
 
-   audio_path = download_audio(url)
-   data = extract_recipe(audio_path)
+   audio_path = None
+   try:
+      # Pull down the audio and immediately run Gemini over it
+      audio_path = download_audio(url)
+      data = extract_recipe(audio_path)
+   finally:
+      # Regardless of success/failure, remove the temp folder yt-dlp created
+      if audio_path:
+         shutil.rmtree(Path(audio_path).parent, ignore_errors=True)
 
-   payload = {
-      "user_id": user_id,
-      "title": data["title"],
-      "instructions": data["instructions"],
-      "ingredients": data["ingredients"],  # stored as JSONB
-      "source_url": url,
-   }
+   recipe = _insert_recipe_record(
+      user_id,
+      title=data["title"],
+      instructions=data["instructions"],
+      ingredients=data["ingredients"],
+      source_url=url,
+   )
 
-   resp = supabase.table(Tables.RECIPES).insert(payload).execute()
-   if not resp.data:
-      raise HTTPException(500, "Failed to save recipe to Supabase.")
-
-   recipe = resp.data[0]
    return recipe
 
 
@@ -95,19 +132,49 @@ def create_recipe(recipe: RecipeCreate, token_data: dict = Depends(verify_token)
    # Get user_id using helper function
    user_id = get_user_id_from_uid(token_data.get("sub"))
 
-   payload = {
-      "user_id": user_id,
-      "title": recipe.title,
-      "instructions": recipe.instructions,
-      "ingredients": recipe.ingredients,
-      "source_url": recipe.source_url,
+   return _insert_recipe_record(
+      user_id,
+      title=recipe.title,
+      instructions=recipe.instructions,
+      ingredients=recipe.ingredients,
+      source_url=recipe.source_url,
+   )
+
+
+@router.post("/from_video")
+def create_recipe_from_video(
+   payload: RecipeExtractRequest,
+   token_data: dict = Depends(verify_token),
+):
+   """Full Gemini pipeline: download video audio, extract, and store recipe."""
+
+   if supabase is None:
+      raise HTTPException(500, "Supabase client is not configured.")
+
+   user_id = get_user_id_from_uid(token_data.get("sub"))
+
+   audio_path = None
+   try:
+      audio_path = download_audio(payload.video_url)
+      data = extract_recipe(audio_path)
+   finally:
+      # Ensure temporary files don't pile up on disk
+      if audio_path:
+         shutil.rmtree(Path(audio_path).parent, ignore_errors=True)
+
+   recipe = _insert_recipe_record(
+      user_id,
+      title=data["title"],
+      instructions=data["instructions"],
+      ingredients=data["ingredients"],
+      source_url=payload.video_url,
+   )
+
+   # Returning both objects lets the UI show the saved record and the raw AI payload
+   return {
+      "recipe": recipe,
+      "gemini_output": data,
    }
-
-   resp = supabase.table(Tables.RECIPES).insert(payload).execute()
-   if not resp.data:
-      raise HTTPException(500, "Failed to save recipe to Supabase.")
-
-   return resp.data[0]
 
 
 @router.get("/")
@@ -193,4 +260,3 @@ def delete_recipe(recipe_id: int, token_data: dict = Depends(verify_token)):
       raise HTTPException(404, "Recipe not found or you don't have permission to delete it.")
 
    return {"message": "Recipe deleted."}
-

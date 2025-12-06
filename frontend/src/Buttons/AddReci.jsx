@@ -1,10 +1,40 @@
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 
-const Button = () => {
+import { createRecipeFromReel } from '../../api_funcs/recipes.js';
+
+const Button = ({ onRecipeCreated }) => {
+  const [status, setStatus] = useState('idle');
+  const [message, setMessage] = useState('');
+
+  const handleClick = async () => {
+    const input = window.prompt('Paste a YouTube/TikTok/IG link to extract');
+    if (!input) return;
+
+    const videoUrl = input.trim();
+    if (!videoUrl) return;
+
+    setStatus('loading');
+    setMessage('Extracting recipe via Gemini...');
+
+    try {
+      const response = await createRecipeFromReel(videoUrl);
+      const recipe = response?.recipe || response;
+      if (onRecipeCreated && recipe) {
+        onRecipeCreated(recipe);
+      }
+      const title = recipe?.title || 'New recipe';
+      setStatus('success');
+      setMessage(`Saved ${title}. Refresh the list if it does not appear automatically.`);
+    } catch (err) {
+      setStatus('error');
+      setMessage(err?.message || 'Failed to create recipe.');
+    }
+  };
+
   return (
     <StyledWrapper>
-      <button>
+      <button onClick={handleClick} disabled={status === 'loading'}>
         + Add Recipe
         <div className="icon-1">
           <svg xmlnsXlink="http://www.w3.org/1999/xlink" viewBox="0 0 26.3 65.33" style={{shapeRendering: 'geometricPrecision', textRendering: 'geometricPrecision', imageRendering: 'optimizeQuality', fillRule: 'evenodd', clipRule: 'evenodd'}} version="1.1" xmlSpace="preserve" xmlns="http://www.w3.org/2000/svg">
@@ -34,6 +64,11 @@ const Button = () => {
           </svg>
         </div>
       </button>
+      {message && (
+        <Status role="status" status={status}>
+          {message}
+        </Status>
+      )}
     </StyledWrapper>
   );
 }
@@ -54,6 +89,11 @@ button {
     border-radius: 8px;
     filter: drop-shadow(2px 2px 3px rgba(0, 0, 0, 0.2));
     }
+
+  button:disabled {
+    opacity: 0.7;
+    cursor: progress;
+  }
 
 
   button:hover {
@@ -172,5 +212,16 @@ button {
       transform: rotate(0);
     }
   }`;
+
+const Status = styled.p`
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: ${(p) =>
+    p.status === 'error'
+      ? '#e74c3c'
+      : p.status === 'success'
+      ? '#2ecc71'
+      : '#555'};
+`;
 
 export default Button;

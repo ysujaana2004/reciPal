@@ -66,10 +66,13 @@ export function getAllRecipes(opts) {
   return request(`/`, opts);
 }
 
-// POST /recipes/extract?url=<video_url>
+// POST /recipes/from_video
 export function createRecipeFromReel(reelUrl, opts) {
-  const urlParam = encodeURIComponent(reelUrl);
-  return request(`/extract?url=${urlParam}`, { method: "POST", ...opts });
+  return request(`/from_video`, {
+    method: "POST",
+    body: { video_url: reelUrl },
+    ...opts,
+  });
 }
 
 // POST /recipes/edit -> placeholder for compatibility with older UI pieces

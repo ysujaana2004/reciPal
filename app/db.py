@@ -7,11 +7,15 @@ load_dotenv()
 
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
 
 if not SUPABASE_URL or not SUPABASE_ANON_KEY:
     raise RuntimeError("Supabase credentials missing")
 
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+# Use service role key on the server to bypass RLS for server-side operations
+supabase: Client = create_client(
+    SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY or SUPABASE_ANON_KEY
+)
 
 
 # ==================== Table Name Constants ====================

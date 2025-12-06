@@ -1,12 +1,70 @@
 import { Link } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+
 import "./DashboardChart.css";
 import Addreci from "../Buttons/AddReci.jsx";
 import ScanPantry from "../Buttons/ScanPantry.jsx";
 import GroceryButton from "../Buttons/GroceryButton.jsx";
+import { getAllRecipes } from "../../api_funcs/recipes.js";
+import { getPantryItems } from "../../api_funcs/pantry.js";
+import { getRecommendations } from "../../api_funcs/grocery.js";
 
 
 export default function Dashboard() {
-  const username = "Fatema"; // Replace with real user data from backend later
+  const username = "Fatema";
+  const [recipes, setRecipes] = useState([]);
+  const [pantryItems, setPantryItems] = useState([]);
+  const [recommendations, setRecommendations] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  const fetchData = useCallback(async (signal) => {
+    setLoading(true);
+    try {
+      const [recipeData, pantryData, recommendationData] = await Promise.all([
+        getAllRecipes({ signal }),
+        getPantryItems({ signal }),
+        getRecommendations(),
+      ]);
+      setRecipes(Array.isArray(recipeData) ? recipeData : []);
+      setPantryItems(Array.isArray(pantryData) ? pantryData : []);
+      setRecommendations(Array.isArray(recommendationData) ? recommendationData : []);
+      setError(null);
+    } catch (err) {
+      if (err.name !== "AbortError") {
+        setError(err);
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    fetchData(controller.signal);
+    return () => controller.abort();
+  }, [fetchData]);
+
+  const refreshRecommendations = useCallback(async () => {
+    try {
+      const recs = await getRecommendations();
+      setRecommendations(Array.isArray(recs) ? recs : []);
+    } catch (err) {
+      console.error("Failed to refresh recommendations", err);
+    }
+  }, []);
+
+  const handleRecipeCreated = useCallback(
+    (recipe) => {
+      if (!recipe) return;
+      setRecipes((prev) => [recipe, ...prev.filter((r) => r.id !== recipe.id)]);
+      refreshRecommendations();
+    },
+    [refreshRecommendations]
+  );
+
+  const recentRecipes = recipes.slice(0, 3);
+  const pantryPreview = pantryItems.slice(0, 3);
 
   return (
     <main className="dashboard">
@@ -15,12 +73,15 @@ export default function Dashboard() {
         <p className="dash-subtitle">
           Here's a quick look at your cooking world today.
         </p>
+        {error && (
+          <p className="dash-error">
+            {error?.message || "Failed to load dashboard data."}
+          </p>
+        )}
 
         <div className="dash-quick-actions">
            <div className="navbar__actions">
-            <Link to="/recipes">
-              <Addreci />
-            </Link>
+              <Addreci onRecipeCreated={handleRecipeCreated} />
             </div>
             <div className="navbar__actions">
             <Link to="/pantry">
@@ -42,17 +103,23 @@ export default function Dashboard() {
       <section className="dash-section dash-stats">
         <div className="dash-card">
           <h3>📘 Recipes</h3>
-          <p className="dash-number">12 Saved</p>
+          <p className="dash-number">
+            {loading ? "…" : `${recipes.length} Saved`}
+          </p>
         </div>
 
         <div className="dash-card">
           <h3>🧰 Pantry Items</h3>
-          <p className="dash-number">27 Items</p>
+          <p className="dash-number">
+            {loading ? "…" : `${pantryItems.length} Items`}
+          </p>
         </div>
 
         <div className="dash-card">
           <h3>🛒 Grocery Needed</h3>
-          <p className="dash-number">8 Items</p>
+          <p className="dash-number">
+            {loading ? "…" : `${recommendations.length} Items`}
+          </p>
         </div>
       </section>
 
@@ -61,20 +128,22 @@ export default function Dashboard() {
         <h2 className="dash-heading">Recent Recipes</h2>
 
         <div className="dash-list">
-          <div className="dash-list-item">
-            <p>🍝 Creamy Alfredo Pasta</p>
-            <Link to="/recipes/1" className="dash-link">View</Link>
-          </div>
-
-          <div className="dash-list-item">
-            <p>🥗 Avocado Salad Bowl</p>
-            <Link to="/recipes/2" className="dash-link">View</Link>
-          </div>
-
-          <div className="dash-list-item">
-            <p>🍪 Soft Chocolate Chip Cookies</p>
-            <Link to="/recipes/3" className="dash-link">View</Link>
-          </div>
+          {loading ? (
+            <p className="muted">Loading recipes…</p>
+          ) : recentRecipes.length ? (
+            recentRecipes.map((recipe) => (
+              <div className="dash-list-item" key={recipe.id ?? recipe.title}>
+                <p>{recipe.title}</p>
+                {recipe.id && (
+                  <Link to={`/recipes/${recipe.id}`} className="dash-link">
+                    View
+                  </Link>
+                )}
+              </div>
+            ))
+          ) : (
+            <p className="muted">No recipes yet. Add your first one!</p>
+          )}
         </div>
       </section>
 
@@ -83,20 +152,20 @@ export default function Dashboard() {
         <h2 className="dash-heading">Pantry Overview</h2>
 
         <div className="dash-list">
-          <div className="dash-list-item">
-            <p>🍅 Tomato Sauce</p>
-            <span className="dash-tag low">Low</span>
-          </div>
-
-          <div className="dash-list-item">
-            <p>🥚 Eggs</p>
-            <span className="dash-tag good">Good</span>
-          </div>
-
-          <div className="dash-list-item">
-            <p>🥛 Milk</p>
-            <span className="dash-tag expiring">Expiring Soon</span>
-          </div>
+          {loading ? (
+            <p className="muted">Loading pantry…</p>
+          ) : pantryPreview.length ? (
+            pantryPreview.map((item) => (
+              <div className="dash-list-item" key={item.id ?? item.ingredient_name}>
+                <p>{item.ingredient_name}</p>
+                <span className="dash-tag">
+                  {item.quantity} {item.unit}
+                </span>
+              </div>
+            ))
+          ) : (
+            <p className="muted">No pantry items yet.</p>
+          )}
         </div>
       </section>
     </main>

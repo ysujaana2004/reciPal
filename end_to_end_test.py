@@ -5,11 +5,9 @@ END-TO-END SYSTEM TEST SCRIPT
 
 This script tests your ENTIRE backend system with REAL logic:
 
-- Real signup/signin
-- Real JWT authentication
-- Real yt-dlp downloader
-- Real Gemini recipe extraction
-- Real DB writes (Supabase or SQLite)
+- Real login against Supabase Auth
+- Real JWT authentication to protected routes
+- Real DB writes/reads (Supabase)
 - Real grocery recommender logic
 
 USAGE:
@@ -27,64 +25,140 @@ REQUIREMENTS:
 - `requests` installed
 - Server running locally on http://127.0.0.1:8000
 - GOOGLE_API_KEY set
+- yt-dlp installed if you enable the Gemini extraction test
+- Set env var E2E_GEMINI_TEST_URL=<your_video_url> to run the Gemini test
 ================================================================================
 """
 
 import requests
-import random
-import string
+import base64
+import json
+import os
+import shutil
 import time
+from pathlib import Path
+
+from dotenv import load_dotenv
+from supabase import create_client
+
+from app.services.downloader import download_audio
+from app.services.gemini import extract_recipe
+
+load_dotenv()
+
+# Load environment variables (looks for .env next to this script)
+# load_dotenv(Path(__file__).resolve().parent / ".env")
 
 BASE = "http://127.0.0.1:8000"
 
-# Use a simple recipe video — adjust if needed
-TEST_VIDEO_URL = "https://www.youtube.com/watch?v=yyi55ZrpJ0E"  # scrambled eggs
+# Existing test account (must exist/confirmed in Supabase)
+TEST_EMAIL = "shadwking58@gmail.com"
+TEST_PASSWORD = "password"
+
+# Optional: provide a YouTube URL (or set E2E_GEMINI_TEST_URL) to
+# trigger an audio download + Gemini extraction test in this script.
+TEST_GEMINI_VIDEO_URL = False #"https://www.youtube.com/watch?v=9Mpk5pdYAf0"
+
+# Use a small static recipe so we don't require Gemini/download
+TEST_RECIPE = {
+    "title": "Test Toast with Butter",
+    "instructions": "Toast bread. Spread butter. Serve warm.",
+    "ingredients": ["bread", "butter"],
+    "source_url": "e2e-script",
+}
 
 
 # ------------------------------------------------------------------------------
-# Helper: Generate random email so signup never conflicts
+# Helpers
 # ------------------------------------------------------------------------------
-def random_email():
-    return "".join(random.choices(string.ascii_lowercase, k=8)) + "@test.com"
+def auth_headers(token):
+    return {"Authorization": f"Bearer {token}"}
+
+
+def decode_uid(token: str):
+    """Decode JWT payload without verification to extract `sub` (Supabase auth UID)."""
+    try:
+        payload = token.split(".")[1]
+        padding = "=" * (-len(payload) % 4)
+        decoded = base64.urlsafe_b64decode(payload + padding)
+        data = json.loads(decoded)
+        return data.get("sub")
+    except Exception as e:
+        print(f"⚠️ Could not decode token: {e}")
+        return None
+
+
+def ensure_user_profile_exists(token: str, email: str):
+    """
+    Ensure the Supabase `user` table has a row for this auth UID.
+    Requires SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY in env.
+    """
+    url = os.getenv("SUPABASE_URL")
+    service_key = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+
+    if not url or not service_key:
+        raise SystemExit(
+            "❌ Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY. "
+            "Set these env vars so the test can upsert the user row (RLS-safe)."
+        )
+
+    uid = decode_uid(token)
+    if not uid:
+        raise SystemExit("❌ Could not decode UID from JWT; cannot ensure user profile.")
+
+    client = create_client(url, service_key)
+    table = client.table("user")
+
+    try:
+        resp = table.select("id").eq("uid", uid).execute()
+        if resp.data:
+            print("ℹ️ User profile already exists in Supabase.")
+            return
+    except Exception as exc:
+        raise SystemExit(f"❌ Failed to query Supabase user table: {exc}")
+
+    username = email.split("@")[0]
+    try:
+        insert_resp = table.upsert({"uid": uid, "username": username}).execute()
+        if insert_resp.data:
+            print("🟢 Created user profile row in Supabase.")
+            return
+    except Exception as exc:
+        raise SystemExit(f"❌ Failed to insert user profile row; check RLS/service key: {exc}")
+
+    raise SystemExit("❌ User profile insert returned no data; check RLS/service key.")
 
 
 # ------------------------------------------------------------------------------
-# STEP 1: SIGN UP
+# STEP 1: SIGN IN → get JWT token
 # ------------------------------------------------------------------------------
-def do_signup(email, password="123123"):
-    print("\n🔵 SIGNING UP...")
-    resp = requests.post(
-        f"{BASE}/auth/signup",
-        params={"email": email, "password": password}
-    )
-    print("Response:", resp.text)
-    resp.raise_for_status()
-
-
-# ------------------------------------------------------------------------------
-# STEP 2: SIGN IN → get JWT token
-# ------------------------------------------------------------------------------
-def do_signin(email, password="123123"):
+def do_login(email, password):
     print("\n🔵 SIGNING IN...")
     resp = requests.post(
-        f"{BASE}/auth/signin",
-        params={"email": email, "password": password}
+        f"{BASE}/auth/login",
+        json={"email": email, "password": password},
+        headers={"Content-Type": "application/json"},
     )
     print("Response:", resp.text)
     resp.raise_for_status()
-    token = resp.json()["access_token"]
+    token = resp.json().get("access_token")
+    if not token:
+        raise RuntimeError("No access_token returned from /auth/login")
     return token
 
 
 # ------------------------------------------------------------------------------
-# STEP 3: EXTRACT A RECIPE VIA REAL DOWNLOADER + GEMINI
+# STEP 2: CREATE A SIMPLE RECIPE (DB write)
 # ------------------------------------------------------------------------------
-def do_extract_recipe(token, url):
-    print("\n🔵 EXTRACTING RECIPE (REAL GEMINI + REAL DOWNLOAD)...")
+def create_recipe(token, recipe_payload):
+    print("\n🔵 CREATING TEST RECIPE...")
     resp = requests.post(
-        f"{BASE}/recipes/extract",
-        params={"url": url},
-        headers={"Authorization": f"Bearer {token}"}
+        f"{BASE}/recipes/",
+        json=recipe_payload,
+        headers={
+            **auth_headers(token),
+            "Content-Type": "application/json",
+        },
     )
     print("Response:", resp.text)
     resp.raise_for_status()
@@ -92,31 +166,90 @@ def do_extract_recipe(token, url):
 
 
 # ------------------------------------------------------------------------------
-# STEP 4: ADD PANTRY ITEMS
+# STEP 3: LIST RECIPES (DB read)
 # ------------------------------------------------------------------------------
-def add_pantry_item(token, name):
-    print(f"\n🔵 ADDING PANTRY ITEM: {name}")
-    resp = requests.post(
-        f"{BASE}/pantry/add",
-        params={"name": name},
-        headers={"Authorization": f"Bearer {token}"}
+def list_recipes(token):
+    print("\n🔵 LISTING RECIPES...")
+    resp = requests.get(
+        f"{BASE}/recipes/",
+        headers=auth_headers(token),
     )
     print("Response:", resp.text)
     resp.raise_for_status()
+    return resp.json()
 
 
 # ------------------------------------------------------------------------------
-# STEP 5: GET GROCERY RECOMMENDATIONS
+# STEP 4: ADD PANTRY ITEMS (DB upsert)
+# ------------------------------------------------------------------------------
+def add_pantry_item(token, name, qty=1, unit="pieces"):
+    print(f"\n🔵 ADDING PANTRY ITEM: {name}")
+    resp = requests.post(
+        f"{BASE}/pantry/",
+        json={"ingredient_name": name, "quantity": qty, "unit": unit},
+        headers={
+            **auth_headers(token),
+            "Content-Type": "application/json",
+        },
+    )
+    print("Response:", resp.text)
+    resp.raise_for_status()
+    return resp.json()
+
+
+# ------------------------------------------------------------------------------
+# STEP 5: CHECK RECIPE VS PANTRY (DB read)
+# ------------------------------------------------------------------------------
+def check_recipe(token, recipe_id):
+    print("\n🔵 CHECKING PANTRY VS RECIPE...")
+    resp = requests.get(
+        f"{BASE}/pantry/check/recipe/{recipe_id}",
+        headers=auth_headers(token),
+    )
+    print("Response:", resp.text)
+    resp.raise_for_status()
+    return resp.json()
+
+
+# ------------------------------------------------------------------------------
+# STEP 6: GET GROCERY RECOMMENDATIONS (DB read)
 # ------------------------------------------------------------------------------
 def get_recommendations(token):
     print("\n🔵 GETTING GROCERY RECOMMENDATIONS...")
     resp = requests.get(
         f"{BASE}/grocery/recommendations",
-        headers={"Authorization": f"Bearer {token}"}
+        headers=auth_headers(token),
     )
     print("Response:", resp.text)
     resp.raise_for_status()
     return resp.json()
+
+
+# ------------------------------------------------------------------------------
+# OPTIONAL STEP: DOWNLOAD AUDIO + RUN GEMINI EXTRACTION
+# ------------------------------------------------------------------------------
+def run_gemini_extraction_test(video_url: str):
+    print("\n🔵 DOWNLOADING AUDIO + EXTRACTING RECIPE VIA GEMINI...")
+    audio_path = None
+    try:
+        audio_path = download_audio(video_url)
+        print(f"Audio saved to: {audio_path}")
+
+        recipe_data = extract_recipe(audio_path)
+        if not recipe_data.get("title"):
+            raise RuntimeError("Gemini response missing title.")
+        if not recipe_data.get("ingredients"):
+            raise RuntimeError("Gemini response missing ingredients list.")
+        if not recipe_data.get("instructions"):
+            raise RuntimeError("Gemini response missing instructions.")
+
+        print("Gemini recipe extraction succeeded:")
+        print(json.dumps(recipe_data, indent=2))
+        return recipe_data
+    finally:
+        if audio_path:
+            # Clean up the temporary download directory
+            shutil.rmtree(Path(audio_path).parent, ignore_errors=True)
 
 
 # ------------------------------------------------------------------------------
@@ -127,27 +260,42 @@ if __name__ == "__main__":
     print("🚀 STARTING END-TO-END SYSTEM TEST")
     print("==============================================================")
 
-    email = random_email()
-    password = "123123"
+    # OPTIONAL: Run Gemini extraction test if URL provided
+    if TEST_GEMINI_VIDEO_URL:
+        run_gemini_extraction_test(TEST_GEMINI_VIDEO_URL)
+    else:
+        print(
+            "\nℹ️ Skipping Gemini extraction test — set E2E_GEMINI_TEST_URL "
+            "to a video URL to enable this step."
+        )
 
-    # 1. Sign up
-    do_signup(email, password)
-
-    # 2. Sign in
-    token = do_signin(email, password)
+    # 1. Sign in using an existing, confirmed Supabase account
+    token = do_login(TEST_EMAIL, TEST_PASSWORD)
     print("\n🟢 JWT TOKEN ACQUIRED")
 
-    # 3. Extract recipe
-    recipe = do_extract_recipe(token, TEST_VIDEO_URL)
+    # 1b. Ensure profile row exists in Supabase `user` table (for DB linkage)
+    ensure_user_profile_exists(token, TEST_EMAIL)
+
+    # 2. Create a recipe (writes to Supabase)
+    recipe = create_recipe(token, TEST_RECIPE)
+    recipe_id = recipe.get("id")
     print("\n🟢 RECIPE STORED:", recipe)
 
-    # 4. Add pantry items manually
-    #    (You can adjust based on the recipe returned)
-    add_pantry_item(token, "salt")
-    add_pantry_item(token, "eggs")
-    add_pantry_item(token, "butter")
+    # 3. List recipes (reads from Supabase)
+    recipes = list_recipes(token)
+    print("\n🟢 CURRENT RECIPES COUNT:", len(recipes))
 
-    # 5. Grocery recommender
+    # 4. Add pantry items (upsert)
+    add_pantry_item(token, "bread", qty=2, unit="slices")
+    add_pantry_item(token, "butter", qty=1, unit="tbsp")
+    add_pantry_item(token, "saad", qty=1, unit="tbsp")
+
+    # 5. Check pantry vs recipe (read)
+    if recipe_id:
+        check = check_recipe(token, recipe_id)
+        print("\n🟢 PANTRY CHECK:", check)
+
+    # 6. Grocery recommender (read/compute)
     recs = get_recommendations(token)
     print("\n🟢 FINAL GROCERY RECOMMENDATIONS:\n", recs)
 
